@@ -1,0 +1,60 @@
+services:
+  # --- Backend ---
+  injoo-app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: injoo-app
+    restart: always
+    env_file:
+      - .env
+    expose:
+      - "10000"
+    volumes:
+      - ./uploaded_images:/app/uploaded_images
+    depends_on:
+      - db
+
+  # --- Database ---
+  db:
+    image: postgres:15
+    container_name: injoo-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-injoo_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-injoo_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-injoo_db}
+    ports:
+      - "5433:5432"  # чтобы не конфликтовало с локальным PostgreSQL
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # --- Frontend ---
+  injoo-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: injoo-frontend
+    restart: always
+    expose:
+      - "80"   # фронт теперь через nginx
+    depends_on:
+      - injoo-app
+
+  # --- Nginx Proxy ---
+  nginx:
+    image: nginx:latest
+    container_name: injoo-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - injoo-app
+      - injoo-frontend
+
+volumes:
+  postgres_data:
