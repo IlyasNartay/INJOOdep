@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   # --- Reverse Proxy ---
   nginx-proxy:
@@ -43,9 +45,9 @@ services:
     expose:
       - "10000"
     environment:
-      - VIRTUAL_HOST=injoo.duckdns.org
-      - LETSENCRYPT_HOST=injoo.duckdns.org
-      - LETSENCRYPT_EMAIL=youremail@example.com
+      VIRTUAL_HOST: injoo.duckdns.org
+      VIRTUAL_PORT: 10000
+      LETSENCRYPT_HOST: injoo.duckdns.org
     volumes:
       - ./uploaded_images:/app/uploaded_images
     depends_on:
@@ -65,7 +67,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  # --- Frontend ---
+  # --- Frontend (Vue build) ---
   injoo-frontend:
     build:
       context: ./frontend
@@ -75,9 +77,10 @@ services:
     expose:
       - "80"
     environment:
-      - VIRTUAL_HOST=frontend.injoo.duckdns.org
-      - LETSENCRYPT_HOST=frontend.injoo.duckdns.org
-      - LETSENCRYPT_EMAIL=youremail@example.com
+      VIRTUAL_HOST: injoo.duckdns.org
+      LETSENCRYPT_HOST: injoo.duckdns.org
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html:ro
     depends_on:
       - injoo-app
 
