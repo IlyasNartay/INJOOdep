@@ -1,4 +1,4 @@
-version: "3.8"
+version: "3.9"
 
 services:
   # --- Reverse Proxy ---
@@ -16,6 +16,8 @@ services:
       - certs:/etc/nginx/certs:rw
       - vhost:/etc/nginx/vhost.d
       - html:/usr/share/nginx/html
+    networks:
+      - injoo_net
 
   # --- Let's Encrypt Companion ---
   letsencrypt:
@@ -32,6 +34,8 @@ services:
       - certs:/etc/nginx/certs:rw
       - vhost:/etc/nginx/vhost.d
       - html:/usr/share/nginx/html
+    networks:
+      - injoo_net
 
   # --- Backend ---
   injoo-app:
@@ -45,13 +49,15 @@ services:
     expose:
       - "10000"
     environment:
-      VIRTUAL_HOST: injoo.duckdns.org
-      VIRTUAL_PORT: 10000
-      LETSENCRYPT_HOST: injoo.duckdns.org
+      - VIRTUAL_HOST=injoo.duckdns.org
+      - LETSENCRYPT_HOST=injoo.duckdns.org
+      - LETSENCRYPT_EMAIL=injoo.kaskelen@gmail.com
     volumes:
       - ./uploaded_images:/app/uploaded_images
     depends_on:
       - db
+    networks:
+      - injoo_net
 
   # --- Database ---
   db:
@@ -66,8 +72,10 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - injoo_net
 
-  # --- Frontend (Vue build) ---
+  # --- Frontend ---
   injoo-frontend:
     build:
       context: ./frontend
@@ -77,15 +85,20 @@ services:
     expose:
       - "80"
     environment:
-      VIRTUAL_HOST: injoo.duckdns.org
-      LETSENCRYPT_HOST: injoo.duckdns.org
-    volumes:
-      - ./frontend/dist:/usr/share/nginx/html:ro
+      - VIRTUAL_HOST=frontend.injoo.duckdns.org
+      - LETSENCRYPT_HOST=frontend.injoo.duckdns.org
+      - LETSENCRYPT_EMAIL=injoo.kaskelen@gmail.com
     depends_on:
       - injoo-app
+    networks:
+      - injoo_net
 
 volumes:
   postgres_data:
   certs:
   vhost:
   html:
+
+networks:
+  injoo_net:
+    driver: bridge
