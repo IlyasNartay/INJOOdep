@@ -46,7 +46,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 app.mount("/uploaded_images", StaticFiles(directory=UPLOAD_FOLDER), name="uploaded_images")
 app.include_router(auth.router, prefix="/auth", tags=["Auth"])
-app.include_router(menu.router, prefix="/api/menu", tags=["Menu"])
+app.include_router(menu.router, prefix="/menu", tags=["Menu"])
 app.include_router(order.router, prefix="/orders", tags=["Orders"])
 app.include_router(address.router, prefix="/addresses", tags=["Addresses"])
 
