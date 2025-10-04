@@ -1,36 +1,20 @@
-services:
+version: "3.9"
 
-  nginx-proxy:
-    image: nginxproxy/nginx-proxy
-    container_name: nginx-proxy
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: injoo-nginx
     restart: always
     ports:
       - "80:80"
       - "443:443"
-    labels:
-      com.github.nginx-proxy.nginx: "true"
     volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-      - certs:/etc/nginx/certs:rw
-      - vhost:/etc/nginx/vhost.d
-      - html:/usr/share/nginx/html
-    networks:
-      - injoo_net
-
-  letsencrypt:
-    image: nginxproxy/acme-companion
-    container_name: nginx-proxy-le
-    restart: always
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./frontend/dist:/usr/share/nginx/html:ro
     depends_on:
-      - nginx-proxy
-    environment:
-      NGINX_PROXY_CONTAINER: nginx-proxy
-      DEFAULT_EMAIL: injoo.kaskelen@gmail.com
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - certs:/etc/nginx/certs:rw
-      - vhost:/etc/nginx/vhost.d
-      - html:/usr/share/nginx/html
+      - injoo-app
+      - injoo-frontend
     networks:
       - injoo_net
 
@@ -44,14 +28,20 @@ services:
       - .env
     expose:
       - "10000"
-    environment:
-      - VIRTUAL_HOST=injoo.duckdns.org
-      - LETSENCRYPT_HOST=injoo.duckdns.org
-      - LETSENCRYPT_EMAIL=injoo.kaskelen@gmail.com
     volumes:
       - ./uploaded_images:/app/uploaded_images
     depends_on:
       - db
+    networks:
+      - injoo_net
+
+  injoo-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: injoo-frontend
+    restart: always
+    # Vue билд создаётся во время сборки, потом nginx просто его берёт
     networks:
       - injoo_net
 
@@ -70,30 +60,8 @@ services:
     networks:
       - injoo_net
 
-  injoo-frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: injoo-frontend
-    restart: always
-    expose:
-      - "80"
-    env_file:
-      - .env
-    environment:
-      - VIRTUAL_HOST=injoo.duckdns.org
-      - LETSENCRYPT_HOST=injoo.duckdns.org
-      - LETSENCRYPT_EMAIL=injoo.kaskelen@gmail.com
-    depends_on:
-      - injoo-app
-    networks:
-      - injoo_net
-
 volumes:
   postgres_data:
-  certs:
-  vhost:
-  html:
 
 networks:
   injoo_net:
