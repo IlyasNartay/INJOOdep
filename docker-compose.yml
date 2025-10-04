@@ -1,5 +1,5 @@
 services:
-  # --- Reverse Proxy ---
+
   nginx-proxy:
     image: nginxproxy/nginx-proxy
     container_name: nginx-proxy
@@ -17,7 +17,6 @@ services:
     networks:
       - injoo_net
 
-  # --- Let's Encrypt Companion ---
   letsencrypt:
     image: nginxproxy/acme-companion
     container_name: nginx-proxy-le
@@ -35,7 +34,6 @@ services:
     networks:
       - injoo_net
 
-  # --- Backend ---
   injoo-app:
     build:
       context: ./backend
@@ -57,7 +55,6 @@ services:
     networks:
       - injoo_net
 
-  # --- Database ---
   db:
     image: postgres:15
     container_name: injoo-db
@@ -73,7 +70,6 @@ services:
     networks:
       - injoo_net
 
-  # --- Frontend ---
   injoo-frontend:
     build:
       context: ./frontend
