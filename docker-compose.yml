@@ -24,13 +24,5 @@ services:
     depends_on:
       - backend
       - frontend
-  nginx:
-    image: nginx:alpine
-    container_name: injoo-nginx
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
-      - frontend
     volumes:
       - ./frontend/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
