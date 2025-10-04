@@ -78,11 +78,12 @@ services:
     restart: always
     expose:
       - "80"
+    env_file:
+      - .env
     environment:
       - VIRTUAL_HOST=injoo.duckdns.org
       - LETSENCRYPT_HOST=injoo.duckdns.org
       - LETSENCRYPT_EMAIL=injoo.kaskelen@gmail.com
-      - VITE_API_BASE_URL=/api/
     depends_on:
       - injoo-app
     networks:
