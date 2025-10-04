@@ -1,28 +1,87 @@
-version: "3.9"
+version: '3.8'
 
 services:
-  backend:
-    build: ./backend
-    container_name: injoo-backend
-    expose:
-      - "10000"
-    command: ./start.sh
-    restart: always
-
-  frontend:
-    build: ./frontend
-    container_name: injoo-frontend
-    expose:
-      - "80"
-    restart: always
-
-  nginx:
-    image: nginx:alpine
-    container_name: injoo-nginx
+  # 1. Reverse Proxy (Traefik) - точка входа для всего трафика
+  traefik:
+    image: traefik:v2.10 # Используем конкретную версию
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      - "--api.insecure=true" # Включает веб-интерфейс Traefik на порту 8080 (только для отладки)
+      - "--providers.docker=true" # Разрешает Traefik "слушать" другие контейнеры
+      - "--providers.docker.exposedbydefault=false" # Управляем сервисами явно через labels
+      - "--entrypoints.web.address=:80" # Входная точка для HTTP
+      - "--entrypoints.websecure.address=:443" # Входная точка для HTTPS
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true" # Метод проверки домена
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}" # Ваш email из .env.prod
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json" # Файл для хранения сертификатов
     ports:
-      - "80:80"
-    depends_on:
-      - backend
-      - frontend
+      - "80:80"   # Для HTTP трафика и проверки Let's Encrypt
+      - "443:443" # Для HTTPS трафика
+      - "8080:8080" # Для доступа к дашборду Traefik (http://localhost:8080)
     volumes:
-      - ./frontend/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - /var/run/docker.sock:/var/run/docker.sock:ro # Позволяет Traefik получать информацию о контейнерах
+      - ./letsencrypt:/letsencrypt # Папка для хранения SSL сертификатов
+    networks:
+      - webnet
+
+  # 2. Бэкенд (Python)
+  backend:
+    build:
+      context: ./backend # Путь к папке с кодом бэкенда
+      dockerfile: Dockerfile
+    container_name: backend
+    restart: unless-stopped
+    env_file:
+      - .env # Загружаем переменные из .env.prod файла
+    depends_on:
+      - db # Запускать только после старта базы данных
+    networks:
+      - webnet
+    labels:
+      - "traefik.enable=true" # Сообщаем Traefik, что этот сервис нужно обрабатывать
+      # Правило для роутинга: все запросы на injoo.duckdns.org/api/... будут идти на бэкенд
+      - "traefik.http.routers.backend.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.entrypoints=websecure" # Работать через HTTPS
+      - "traefik.http.routers.backend.tls.certresolver=letsencrypt" # Использовать Let's Encrypt
+      # Указываем Traefik, на какой порт внутри контейнера перенаправлять трафик (порт Gunicorn)
+      - "traefik.http.services.backend.loadbalancer.server.port=8000"
+
+  # 3. Фронтенд (Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    restart: unless-stopped
+    networks:
+      - webnet
+    labels:
+      - "traefik.enable=true"
+      # Правило для роутинга: все остальные запросы на injoo.duckdns.org будут идти на фронтенд
+      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+      # Указываем Traefik, на какой порт внутри контейнера перенаправлять трафик (порт Nginx)
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+
+  # 4. База данных (PostgreSQL)
+  db:
+    image: postgres:15-alpine
+    container_name: db
+    restart: unless-stopped
+    env_file:
+      - .env # Используем те же переменные для создания пользователя и БД
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Сохраняем данные БД между перезапусками
+    networks:
+      - webnet
+
+# Определяем сети и тома
+networks:
+  webnet:
+    driver: bridge
+
+volumes:
+  postgres_data:
