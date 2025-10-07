@@ -129,7 +129,8 @@ const login = async () => {
   isLoading.value = true;
   try {
     const response = await axios.post(
-      `${import.meta.env.VITE_API_BASE_URL}auth/login?phone=${data.phone}&&password=${data.password}`
+      `https://api.injoo.duckdns.org/
+}auth/login?phone=${data.phone}&&password=${data.password}`
     );
     const token = response.data.access_token;
     const user_role = response.data.user_role;
