@@ -45,8 +45,8 @@ services:
     expose:
       - "10000"
     environment:
-      - VIRTUAL_HOST=api.injoo2.duckdns.org
-      - LETSENCRYPT_HOST=api.injoo2.duckdns.org
+      - VIRTUAL_HOST=api.injoo.duckdns.org
+      - LETSENCRYPT_HOST=api.injoo.duckdns.org
       - LETSENCRYPT_EMAIL=injoo.kaskelen@gmail.com
     volumes:
       - ./uploaded_images:/app/uploaded_images
@@ -72,17 +72,15 @@ services:
 
   injoo-frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .          # <--- теперь корень проекта
+      dockerfile: ./frontend/Dockerfile
     container_name: injoo-frontend
     restart: always
     expose:
       - "80"
-    env_file:
-      - .env
     environment:
-      - VIRTUAL_HOST=injoo2.duckdns.org
-      - LETSENCRYPT_HOST=injoo2.duckdns.org
+      - VIRTUAL_HOST=injoo.duckdns.org
+      - LETSENCRYPT_HOST=injoo.duckdns.org
       - LETSENCRYPT_EMAIL=injoo.kaskelen@gmail.com
     depends_on:
       - injoo-app
