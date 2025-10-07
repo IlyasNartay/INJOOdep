@@ -1,87 +1,100 @@
-version: '3.8'
-
 services:
-  # 1. Reverse Proxy (Traefik) - точка входа для всего трафика
-  traefik:
-    image: traefik:v2.10 # Используем конкретную версию
-    container_name: traefik
-    restart: unless-stopped
-    command:
-      - "--api.insecure=true" # Включает веб-интерфейс Traefik на порту 8080 (только для отладки)
-      - "--providers.docker=true" # Разрешает Traefik "слушать" другие контейнеры
-      - "--providers.docker.exposedbydefault=false" # Управляем сервисами явно через labels
-      - "--entrypoints.web.address=:80" # Входная точка для HTTP
-      - "--entrypoints.websecure.address=:443" # Входная точка для HTTPS
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true" # Метод проверки домена
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}" # Ваш email из .env.prod
-      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json" # Файл для хранения сертификатов
+
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy
+    container_name: nginx-proxy
+    restart: always
     ports:
-      - "80:80"   # Для HTTP трафика и проверки Let's Encrypt
-      - "443:443" # Для HTTPS трафика
-      - "8080:8080" # Для доступа к дашборду Traefik (http://localhost:8080)
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro # Позволяет Traefik получать информацию о контейнерах
-      - ./letsencrypt:/letsencrypt # Папка для хранения SSL сертификатов
-    networks:
-      - webnet
-
-  # 2. Бэкенд (Python)
-  backend:
-    build:
-      context: ./backend # Путь к папке с кодом бэкенда
-      dockerfile: Dockerfile
-    container_name: backend
-    restart: unless-stopped
-    env_file:
-      - .env # Загружаем переменные из .env.prod файла
-    depends_on:
-      - db # Запускать только после старта базы данных
-    networks:
-      - webnet
+      - "80:80"
+      - "443:443"
     labels:
-      - "traefik.enable=true" # Сообщаем Traefik, что этот сервис нужно обрабатывать
-      # Правило для роутинга: все запросы на injoo.duckdns.org/api/... будут идти на бэкенд
-      - "traefik.http.routers.backend.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.backend.entrypoints=websecure" # Работать через HTTPS
-      - "traefik.http.routers.backend.tls.certresolver=letsencrypt" # Использовать Let's Encrypt
-      # Указываем Traefik, на какой порт внутри контейнера перенаправлять трафик (порт Gunicorn)
-      - "traefik.http.services.backend.loadbalancer.server.port=8000"
+      com.github.nginx-proxy.nginx: "true"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - certs:/etc/nginx/certs:rw
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+    networks:
+      - injoo_net
 
-  # 3. Фронтенд (Nginx)
-  frontend:
+  letsencrypt:
+    image: nginxproxy/acme-companion
+    container_name: nginx-proxy-le
+    restart: always
+    depends_on:
+      - nginx-proxy
+    environment:
+      NGINX_PROXY_CONTAINER: nginx-proxy
+      DEFAULT_EMAIL: injoo.kaskelen@gmail.com
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - certs:/etc/nginx/certs:rw
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+    networks:
+      - injoo_net
+
+  injoo-app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: injoo-app
+    restart: always
+    env_file:
+      - .env
+    expose:
+      - "10000"
+    environment:
+      - VIRTUAL_HOST=injoo.duckdns.org
+      - LETSENCRYPT_HOST=injoo.duckdns.org
+      - LETSENCRYPT_EMAIL=injoo.kaskelen@gmail.com
+    volumes:
+      - ./uploaded_images:/app/uploaded_images
+    depends_on:
+      - db
+    networks:
+      - injoo_net
+
+  db:
+    image: postgres:15
+    container_name: injoo-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-injoo_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-injoo_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-injoo_db}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - injoo_net
+
+  injoo-frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: frontend
-    restart: unless-stopped
-    networks:
-      - webnet
-    labels:
-      - "traefik.enable=true"
-      # Правило для роутинга: все остальные запросы на injoo.duckdns.org будут идти на фронтенд
-      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN}`)"
-      - "traefik.http.routers.frontend.entrypoints=websecure"
-      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
-      # Указываем Traefik, на какой порт внутри контейнера перенаправлять трафик (порт Nginx)
-      - "traefik.http.services.frontend.loadbalancer.server.port=80"
-
-  # 4. База данных (PostgreSQL)
-  db:
-    image: postgres:15-alpine
-    container_name: db
-    restart: unless-stopped
+    container_name: injoo-frontend
+    restart: always
+    expose:
+      - "80"
     env_file:
-      - .env # Используем те же переменные для создания пользователя и БД
-    volumes:
-      - postgres_data:/var/lib/postgresql/data # Сохраняем данные БД между перезапусками
+      - .env
+    environment:
+      - VIRTUAL_HOST=injoo.duckdns.org
+      - LETSENCRYPT_HOST=injoo.duckdns.org
+      - LETSENCRYPT_EMAIL=injoo.kaskelen@gmail.com
+    depends_on:
+      - injoo-app
     networks:
-      - webnet
-
-# Определяем сети и тома
-networks:
-  webnet:
-    driver: bridge
+      - injoo_net
 
 volumes:
   postgres_data:
+  certs:
+  vhost:
+  html:
+
+networks:
+  injoo_net:
+    driver: bridge
