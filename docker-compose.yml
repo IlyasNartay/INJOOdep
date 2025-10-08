@@ -58,9 +58,9 @@ services:
     expose:
       - "10000"
     environment:
-      - VIRTUAL_HOST=injoo2.duckdns.org
+      - VIRTUAL_HOST=api.injoo.duckdns.org
       - VIRTUAL_PORT=10000
-      - LETSENCRYPT_HOST=injoo2.duckdns.org
+      - LETSENCRYPT_HOST=api.injoo.duckdns.org
       - LETSENCRYPT_EMAIL=injoo.kaskelen@gmail.com
     volumes:
       - ./uploaded_images:/app/uploaded_images
