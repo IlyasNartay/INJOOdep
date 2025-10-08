@@ -22,11 +22,6 @@ RUN npm install
 # Копируем остальные файлы проекта (включая .env.production)
 # В этот момент .env.production должен быть в корне frontend папки
 COPY . .
-
-# Проверяем, что .env.production существует перед сборкой
-# Это опциональный шаг для отладки, чтобы убедиться, что файл доступен
-RUN if [ -f .env.production ]; then echo ".env.production found"; else echo ".env.production NOT found! Build might fail."; exit 1; fi
-
 # Запускаем сборку фронтенд-приложения
 # Vite автоматически подхватит .env.production, если он находится в корне
 RUN npm run build
