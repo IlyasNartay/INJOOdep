@@ -34,7 +34,7 @@
             <input
               v-model="data.phone"
               type="email"
-              placeholder="Phone"
+              placeholder="Тел"
               class="flex-1 bg-transparent text-white placeholder-white/60 text-lg focus:outline-none"
             />
           </div>
@@ -49,7 +49,7 @@
             <input
               v-model="data.password"
               type="password"
-              placeholder="Password"
+              placeholder="Пароль"
               class="flex-1 bg-transparent text-white placeholder-white/60 text-lg focus:outline-none"
             />
           </div>

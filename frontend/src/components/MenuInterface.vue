@@ -30,10 +30,10 @@ const categories = ref([
   { id: "tebyan", name: "Тебян", icon: "/tebyan.svg" },
   { id: "fish", name: "Рыба", icon: "/fish.png" },
   { id: "soup", name: "Суп", icon: "/soup.png" },
-  { id: "holiday", name: "Праздничное", icon: "/holiday.png" },
+  { id: "holiday", name: "Праздничное", icon: "/thanksgiving.png" },
   { id: "lagman", name: "Лагман", icon: "/lagman.png" },
   { id: "comyan", name: "Цомиян", icon: "/comyan.svg" },
-  { id: "european", name: "Европейские", icon: "/europe.png" },
+  { id: "european", name: "Европейские", icon: "/beef.png" },
   { id: "pizza", name: "Пицца", icon: "/pizza.svg" },
   { id: "moti", name: "Моти", icon: "/moti.png" },
   { id: "drinks", name: "Напитки", icon: "/drink.png" },
@@ -41,53 +41,7 @@ const categories = ref([
   { id: "pasta", name: "Паста", icon: "/pasta.svg" },
   { id: "fries", name: "Картофель фри", icon: "/fries.png" },
 ])
-const menu1 = [
-  {
-    id: 1,
-    name: "Маргарита",
-    description: "Классическая пицца с томатным соусом, моцареллой и свежим базиликом.",
-    price: 2500,
-    images: [
-      { image_url: "/Milk-tea-removebg-preview.png" }
-    ]
-  },
-  {
-    id: 2,
-    name: "Чизбургер",
-    description: "Сочный бифштекс из говядины, сыр чеддер, свежие овощи и фирменный соус.",
-    price: 2000,
-    images: [
-      { image_url: "/Milk-tea-removebg-preview.png" }
-    ]
-  },
-  {
-    id: 3,
-    name: "Филадельфия",
-    description: "Ролл с лососем, сливочным сыром и авокадо, завернутый в рис и нори.",
-    price: 3000,
-    images: [
-      { image_url: "/Milk-tea-removebg-preview.png" }
-    ]
-  },
-  {
-    id: 4,
-    name: "Стейк Рибай",
-    description: "Стейк средней прожарки из мраморной говядины с овощами-гриль.",
-    price: 7500,
-    images: [
-      { image_url: "/Milk-tea-removebg-preview.png" }
-    ]
-  },
-  {
-    id: 5,
-    name: "Салат Цезарь",
-    description: "Курица гриль, листья салата, сухарики и пармезан под классическим соусом.",
-    price: 1800,
-    images: [
-      { image_url: "/public/Milk-tea-removebg-preview.png" }
-    ]
-  }
-]
+
 
 
 const toggleCart = (restaurant) => {
@@ -264,55 +218,7 @@ onMounted(() => {
     </div>
 
     <!-- Promotional Banners -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-      <div
-        class="bg-gradient-to-r from-orange-500 to-red-500 rounded-lg p-4 sm:p-6 text-white"
-      >
-        <div class="flex items-center justify-between">
-          <div class="flex-1">
-            <div
-              class="bg-cyan-400 text-black px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold mb-2 inline-block"
-            >
-              -30%
-            </div>
-            <h3 class="text-sm sm:text-lg font-bold mb-2">
-              Скидка 30% на позиции в SF Shaurma Food!
-            </h3>
-          </div>
-          <div
-            class="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-white/20 rounded-full flex items-center justify-center ml-4"
-          >
-            <UtensilsCrossedIcon
-              class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12"
-            />
-          </div>
-        </div>
-      </div>
 
-      <div
-        class="bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg p-4 sm:p-6 text-white"
-      >
-        <div class="flex items-center justify-between">
-          <div class="flex-1">
-            <div
-              class="bg-orange-400 text-black px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold mb-2 inline-block"
-            >
-              -20%
-            </div>
-            <h3 class="text-sm sm:text-lg font-bold mb-2">
-              Скидка 20% и позиции в подарок в KFC!
-            </h3>
-          </div>
-          <div
-            class="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-white/20 rounded-full flex items-center justify-center ml-4"
-          >
-            <UtensilsCrossedIcon
-              class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Restaurant Sections -->
     <div class="space-y-6 sm:space-y-8">
