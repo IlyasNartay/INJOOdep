@@ -4,7 +4,7 @@ FROM node:20 AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
-COPY ../frontend .
+COPY . .
 RUN npm run build
 
 # 2️⃣ Настройка Nginx
