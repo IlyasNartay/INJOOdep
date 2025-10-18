@@ -86,22 +86,24 @@ function toggleSidebar() {
 }
 
 // Все пункты меню + маршруты
-const menuItems = [
-  { label: "Главная", to: "/CliMain", roles: ["admin", "customer"], icon:'line-md:home-md' },
-  // { label: 'Пользователи', to: '/users', roles: ['admin'] },
-  { label: "Добавить блюда", to: "/adddishes", roles: ["admin", "manager"], icon:'line-md:document-add' },
-  { label: "Сделать заказ", to: "/Basket", roles: ["customer"], icon:'line-md:document-list' },
-    { label: "Мои заказы", to: "/myorder", roles: ["customer"], icon:'line-md:document-list' },
-
-  // { label: 'Настройки', to: '/settings', roles: ['admin', 'manager', 'customer'] },
-  { label: "Выход", to: "/", roles: ["admin", "manager", "customer"], icon:'line-md:clipboard-arrow' },
-];
+const menuItems = computed(() => [
+  {
+    label: "Главная",
+    to: userRole.value === "guest" ? "/GuestOrder" : "/CliMain",
+    roles: ["admin", "customer", "guest"],
+    icon: "line-md:home-md",
+  },
+  { label: "Добавить блюда", to: "/adddishes", roles: ["admin", "manager"], icon: "line-md:document-add" },
+  { label: "Сделать заказ", to: "/Basket", roles: ["customer", "guest"], icon: "line-md:document-list" },
+  { label: "Мои заказы", to: "/myorder", roles: ["customer", "guest"], icon: "line-md:document-list" },
+  { label: "Выход", to: "/", roles: ["admin", "manager", "customer", "guest"], icon: "line-md:clipboard-arrow" },
+]);
 const logout = () => {
   localStorage.removeItem("authToken"); // или как он у тебя называется
   localStorage.removeItem("userRole"); // если ты сохраняешь роль
   router.push("/"); // редирект на главную или на login
 };
 const filteredMenu = computed(() =>
-  menuItems.filter((item) => item.roles.includes(userRole.value))
+  menuItems.value.filter((item) => item.roles.includes(userRole.value))
 );
 </script>

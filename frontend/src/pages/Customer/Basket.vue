@@ -30,7 +30,8 @@
                     class="max-[480px]:w-[40px] max-[480px]:h-[40px] w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0"
                   >
                     <img
-                      :src="image_url + item.images[0].image_url"
+                    v-if="item && item.image_url"
+                      :src="image_url + item.images[0].image_url || 'o'"
                       :alt="item.name"
                       class="w-full h-full object-cover max-[480px]:w-[40px] max-[480px]:h-[40px]"
                     />

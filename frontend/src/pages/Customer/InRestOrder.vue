@@ -206,8 +206,11 @@ function saveTable() {
 }
 
 onMounted(() => {
+   localStorage.setItem('userRole', 'guest')
+  console.log('✅ Гостевая роль установлена')
   const saved = localStorage.getItem("selectedTable");
   if (saved) selectedTable.value = Number(saved);
+  
 });
 </script>
 

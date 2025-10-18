@@ -36,14 +36,16 @@ async def send_order_to_kitchen(order_data: dict):
                 print(f"⚠️ Ошибка при разборе блюда: {dish} — {e}")
                 continue
 
-        # 3. Собираем сообщение
         message = (
-            f"🧾 <b>Новый заказ #{order_data['id']}</b>\n"
-            f"👤 Пользователь ID: <code>{order_data['user_id']}</code>\n"
-            f"📍 Адрес: {address_text}\n"
-            f"🍽 Блюда:\n" + "\n".join([f"▪️ {line}" for line in dish_lines]) + "\n"
-            f"💰 Сумма: <b>{order_data['total_price']} ₸</b>\n"
-            f"📦 Статус: <i>{order_data['status']}</i>"
+                f"🧾 <b>Новый заказ #{order_data['id']}</b>\n\n"
+                f"👤 <b>Пользователь ID:</b> <code>{order_data['user_id']}</code>\n"
+                f"📍 <b>Адрес:</b> {address_text}\n"
+                f"💰 <b>Сумма:</b> {order_data['total_price']} ₸\n"
+                f"📦 <b>Статус:</b> <i>{order_data['status']}</i>\n\n"
+                f"🍽 <b>Блюда:</b>\n"
+                f"```\n" +
+                "\n".join([f"{line}" for line in dish_lines]) +
+                "\n```"
         )
 
         # 4. Inline-кнопка

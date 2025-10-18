@@ -2,7 +2,7 @@
   <div
     class="min-h-screen w-full bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800 relative"
   >
-    <!-- Header -->
+
     <header
       class="bg-gray-900/90 backdrop-blur-sm border-b border-gray-800 sticky top-0 z-40"
     >

@@ -46,7 +46,7 @@ const submitDish = async () => {
 
   try {
     const response = await axios.post(
-      "${import.meta.env.VITE_API_BASE_URL}menu/",
+      `${import.meta.env.VITE_API_BASE_URL}menu/`,
       formData,
       {
         headers: {
