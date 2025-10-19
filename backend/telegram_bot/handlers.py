@@ -10,7 +10,6 @@ REGISTER_CODES = {
     "courier456": "courier"
 }
 
-
 async def send_order_to_kitchen(order_data: dict):
     db = SessionLocal()
     try:
@@ -69,6 +68,54 @@ async def send_order_to_kitchen(order_data: dict):
                     chat_id=int(kitchen.chat_id),
                     text=message,
                     reply_markup=markup,
+                    parse_mode="HTML"
+                )
+            except Exception as e:
+                print(f"❌ Ошибка отправки сообщения кухне {kitchen.chat_id}: {e}")
+
+    except Exception as global_error:
+        print(f"💥 Ошибка в send_order_to_kitchen: {global_error}")
+    finally:
+        db.close()
+
+async def send_table_order_to_kitchen(order_data: dict):
+    db = SessionLocal()
+    try:
+
+        # 2. Формируем список блюд
+        dish_lines = []
+        for dish in order_data.get("dishes", []):
+            try:
+                name = dish.get("name") if isinstance(dish, dict) else getattr(dish, "name", "неизвестно")
+                quantity = dish.get("quantity") if isinstance(dish, dict) else getattr(dish, "quantity", "неизвестно")
+                dish_lines.append(f"{name} × {quantity}")
+            except Exception as e:
+                print(f"⚠️ Ошибка при разборе блюда: {dish} — {e}")
+                continue
+
+        message = (
+                f"🧾 <b>Новый заказ #{order_data['id']}</b>\n\n"
+                f"📍 <b> Cтол :</b> {order_data['table_id']}\n"
+                f"💰 <b>Сумма:</b> {order_data['total_price']} ₸\n"
+                f"🍽 <b>Блюда:</b>\n"
+                f"```\n" +
+                "\n".join([f"{line}" for line in dish_lines]) +
+                "\n```"
+        )
+
+        # 5. Отправка всем кухням
+        kitchens = db.query(TelegramUser).filter(TelegramUser.role == "kitchen").all()
+        print(f"🔔 Кухонь найдено: {len(kitchens)}")
+
+        for kitchen in kitchens:
+            if not kitchen.chat_id:
+                print(f"⚠️ У пользователя с id={kitchen.id} отсутствует chat_id")
+                continue
+            try:
+                print(f"📤 Отправка сообщения кухне chat_id={kitchen.chat_id}")
+                await bot.send_message(
+                    chat_id=int(kitchen.chat_id),
+                    text=message,
                     parse_mode="HTML"
                 )
             except Exception as e:

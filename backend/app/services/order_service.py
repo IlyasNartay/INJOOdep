@@ -79,56 +79,73 @@ async def create_order(db: Session, order_data: schemas.OrderCreate, user: model
         ]
     )
 
-async def create_table_order(tableOrder: schemas.TableOrderCreate, db: Session):
-    # 1. Считаем сумму
-    total_price = 0
-    for d in tableOrder.order_dishes:
-        dish = db.query(models.Dish).filter(models.Dish.id == d.dish_id).first()
-        if not dish:
-            raise ValueError(f"Блюдо с id={d.dish_id} не найдено")
-        total_price += dish.price * d.quantity
+async def create_table_order(order_data: schemas.TableOrderCreate, db: Session):
+    dish_ids = [item.dish_id for item in order_data.dishes]
+    dishes = db.query(models.Dish).filter(models.Dish.id.in_(dish_ids)).all()
 
-    # 2. Создаём заказ
-    db_table_order = models.TableOrder(
-        table_id=tableOrder.table_id,
-        total_price=total_price,
+    if len(dishes) != len(dish_ids):
+        raise HTTPException(status_code=400, detail="Некоторые блюда не найдены")
+
+    order = models.TableOrder(
+        table_id=order_data.table_id,
+        total_price=0
     )
-    db.add(db_table_order)
-    db.commit()
-    db.refresh(db_table_order)
 
-    # 3. Добавляем блюда
-    for d in tableOrder.order_dishes:
-        db_order_dish = models.TableOrderDish(
-            order_id=db_table_order.id,
-            dish_id=d.dish_id,
-            quantity=d.quantity
-        )
-        db.add(db_order_dish)
+    total_price = 0
+    for item in order_data.dishes:
+        dish = next((d for d in dishes if d.id == item.dish_id), None)
+        if dish is None:
+            continue
+
+        total_price += dish.price * item.quantity
+
+        order.table_order_dishes.append(models.TableOrderDish(
+            dish=dish,
+            quantity=item.quantity
+        ))
+
+    order.total_price = total_price
+
+    db.add(order)
     db.commit()
+    db.refresh(order)
 
     # Готовим данные для отправки в Telegram
     return_data = {
-        "id": db_table_order.id,
-        "table_id": db_table_order.table_id,
+        "id": order.id,
+        "table_id": order.tabel_id,
         "dishes": [
             {
                 "id": d.id,
                 "name": d.name,
                 "price": d.price,
-                "quantity": next(item.quantity for item in tableOrder.dishes if item.dish_id == d.id)
+                "quantity": next(item.quantity for item in order_data.dishes if item.dish_id == d.id)
             }
             for d in dishes
         ],
-        "total_price": db_table_order.total_price,
+        "total_price": order.total_price,
     }
 
+    # 🔁 ВРЕМЕННО отправляем напрямую, чтобы видеть ошибки/логи
     try:
-        await send_order_to_kitchen(return_data)
+        await send_table_order_to_kitchen(return_data)
     except Exception as e:
         print(f"⚠️ Ошибка при отправке в Telegram (не критично): {e}")
 
-    return db_table_order
+    return schemas.OrderRead(
+        id=order.id,
+        user_id=order.user_id,
+        address_id=order.address_id,
+        total_price=order.total_price,
+        status=order.status,
+        order_dishes=[
+            schemas.OrderDishRead(
+                dish=schemas.DishRead.model_validate(od.dish),
+                quantity=od.quantity
+            )
+            for od in order.order_dishes
+        ]
+    )
 
 
 def get_order_by_id(db: Session, order_id: int) -> models.Order:
