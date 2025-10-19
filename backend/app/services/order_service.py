@@ -125,7 +125,7 @@ def send_to_telegram(order, total_price: float):
     requests.post(url, json={"chat_id": CHAT_ID, "text": text})
 
 
-def create_table_order(tableOrder: schemas.TableOrderCreate, db: Session):
+async def create_table_order(tableOrder: schemas.TableOrderCreate, db: Session):
     # 1. Считаем сумму
     total_price = 0
     for d in tableOrder.order_dishes:
@@ -153,8 +153,10 @@ def create_table_order(tableOrder: schemas.TableOrderCreate, db: Session):
         db.add(db_order_dish)
     db.commit()
 
-    # 4. Telegram уведомление
-    send_to_telegram(tableOrder, total_price)
+    try:
+        await send_order_to_kitchen(return_data)
+    except Exception as e:
+        print(f"⚠️ Ошибка при отправке в Telegram (не критично): {e}")
 
     return db_table_order
 

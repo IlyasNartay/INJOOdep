@@ -19,9 +19,9 @@ def get_order(
 ):
     return services.get_my_orders(db, current_user)
 @router.post("/table")
-def create_table_order(
+async def create_table_order(
     order: schemas.TableOrderCreate,
     db: Session = Depends(get_db)
 ):
-    db_order = services.create_table_order(order, db)
+    db_order =  await services.create_table_order(order, db)
     return {"message": "Order created", "order_id": db_order.id}
