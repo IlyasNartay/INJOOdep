@@ -1,5 +1,5 @@
 # app/services/order_service.py
-
+from pandas.plotting import table
 from sqlalchemy.orm import Session
 from app import models, schemas
 from fastapi import HTTPException, Depends
@@ -132,12 +132,10 @@ async def create_table_order(order_data: schemas.TableOrderCreate, db: Session):
     except Exception as e:
         print(f"⚠️ Ошибка при отправке в Telegram (не критично): {e}")
 
-    return schemas.OrderRead(
+    return schemas.TableOrderRead(
         id=order.id,
-        user_id=order.user_id,
-        address_id=order.address_id,
+        table_id=order.address_id,
         total_price=order.total_price,
-        status=order.status,
         order_dishes=[
             schemas.OrderDishRead(
                 dish=schemas.DishRead.model_validate(od.dish),

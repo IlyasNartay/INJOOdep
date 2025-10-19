@@ -30,6 +30,15 @@ class OrderRead(BaseModel):
         "from_attributes": True
     }
 
+class TableOrderRead(BaseModel):
+    id: int
+    table_id: int
+    total_price: float
+    order_dishes: List[OrderDishRead]
+
+    model_config = {
+        "from_attributes": True
+    }
 class TableOrderCreate(BaseModel):
     table_id: int
     dishes: List[DishInOrder]
