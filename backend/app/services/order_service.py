@@ -99,7 +99,7 @@ async def create_table_order(order_data: schemas.TableOrderCreate, db: Session):
 
         total_price += dish.price * item.quantity
 
-        order.table_order_dishes.append(models.TableOrderDish(
+        order.dishes.append(models.TableOrderDish(
             dish=dish,
             quantity=item.quantity
         ))
