@@ -144,7 +144,7 @@ def create_table_order(tableOrder: schemas.TableOrderCreate, db: Session):
     db.refresh(db_table_order)
 
     # 3. Добавляем блюда
-    for d in tableOrder.table_order_dishes:
+    for d in tableOrder.order_dishes:
         db_order_dish = models.OrderDish(
             order_id=db_table_order.id,
             dish_id=d.dish_id,
