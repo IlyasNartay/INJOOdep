@@ -125,28 +125,28 @@ def send_to_telegram(order, total_price: float):
     requests.post(url, json={"chat_id": CHAT_ID, "text": text})
 
 
-def create_table_order(order: schemas.TableOrderCreate, db: Session):
+def create_table_order(tableOrder: schemas.TableOrderCreate, db: Session):
     # 1. Считаем сумму
     total_price = 0
-    for d in order.order_dishes:
+    for d in tableOrder.order_dishes:
         dish = db.query(models.Dish).filter(models.Dish.id == d.dish_id).first()
         if not dish:
             raise ValueError(f"Блюдо с id={d.dish_id} не найдено")
         total_price += dish.price * d.quantity
 
     # 2. Создаём заказ
-    db_order = models.TableOrder(
-        table_id=order.table_id,
+    db_table_order = models.TableOrder(
+        table_id=tableOrder.table_id,
         total_price=total_price,
     )
-    db.add(db_order)
+    db.add(db_table_order)
     db.commit()
-    db.refresh(db_order)
+    db.refresh(db_table_order)
 
     # 3. Добавляем блюда
-    for d in order.order_dishes:
+    for d in tableOrder.table_order_dishes:
         db_order_dish = models.OrderDish(
-            order_id=db_order.id,
+            order_id=db_table_order.id,
             dish_id=d.dish_id,
             quantity=d.quantity
         )
@@ -154,7 +154,7 @@ def create_table_order(order: schemas.TableOrderCreate, db: Session):
     db.commit()
 
     # 4. Telegram уведомление
-    send_to_telegram(order, total_price)
+    send_to_telegram(tableOrder, total_price)
 
-    return db_order
+    return db_table_order
 
