@@ -29,6 +29,7 @@ services:
       - certs:/etc/nginx/certs
       - vhost:/etc/nginx/vhost.d
       - html:/usr/share/nginx/html
+      - acme:/etc/acme.sh
     networks:
       - injoo_net
 
@@ -94,6 +95,7 @@ volumes:
   certs:
   vhost:
   html:
+  acme:
 
 networks:
   injoo_net:
