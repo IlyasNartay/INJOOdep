@@ -32,7 +32,7 @@ class OrderRead(BaseModel):
 
 class TableOrderCreate(BaseModel):
     table_id: int
-    order_dishes: List[DishInOrder]
+    dishes: List[DishInOrder]
 
     model_config = {
         "from_attributes": True
