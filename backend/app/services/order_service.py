@@ -145,7 +145,7 @@ def create_table_order(tableOrder: schemas.TableOrderCreate, db: Session):
 
     # 3. Добавляем блюда
     for d in tableOrder.order_dishes:
-        db_order_dish = models.OrderDish(
+        db_order_dish = models.TableOrderDish(
             order_id=db_table_order.id,
             dish_id=d.dish_id,
             quantity=d.quantity
