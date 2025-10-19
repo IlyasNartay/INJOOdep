@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-8">
+  <div class="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800 py-8 animated-gradient">
     <div class="max-w-6xl mx-auto px-4">
       <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-0">
@@ -128,7 +128,6 @@
           </CustomModal>
           <Loader v-if="isLoading" />
 
-          <!-- Right side - Order Summary -->
           <div class="bg-rose-50 p-8">
             <div class="sticky top-8">
               <!-- Divider Line -->
@@ -142,9 +141,6 @@
                   >
                     Итого в корзине
                   </span>
-                  <!-- <span class="text-2xl font-bold text-gray-900">
-      ${{ cartTotal.toFixed(2) }}
-    </span> -->
                 </div>
                 <p class="text-sm text-gray-500">
                   Доставка и налоги будут рассчитаны при оформлении заказа
@@ -164,10 +160,9 @@
                   </span>
                 </label>
               </div>
-
-              <!-- Кнопка оформления заказа -->
+<p>{{ store.address?.[0]?.id }}asd</p>              <!-- Кнопка оформления заказа -->
               <button
-                @click="handleCheckout"
+                @click="makeCheckout"
                 :disabled="!agreeToTerms || cartI.length === 0"
                 class="w-full bg-gray-900 text-white py-4 px-6 rounded-lg font-medium uppercase tracking-wide hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors mb-4"
               >
@@ -193,12 +188,13 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, watch } from "vue";
 import { Plus as PlusIcon, Minus as MinusIcon } from "lucide-vue-next";
 import { useCartStore } from "/src/stores/Basket.js";
 import CustomModal from "@/components/CustomModal.vue";
 import axios from "axios";
 import Loader from "@/components/Loader.vue";
+import { useAddressStore } from '@/stores/addressStore';
 
 const cartI = useCartStore();
 const isLoading = ref(false);
@@ -207,11 +203,15 @@ const success = ref(false);
 // Reactive data
 const orderNote = ref("");
 const agreeToTerms = ref(false);
+const store = useAddressStore();
+const role = localStorage.getItem('userRole')
+
+const address = ref([{ address: '' }])
+
 let table_id = ref(localStorage.getItem('selectedTable'))
 function remove(id) {
   cartI.removeItem(id);
 }
-
 const toggleCartItem = (item) => {
   const index = cartItems.value.findIndex((i) => i.id === item.id);
   if (index !== -1) {
@@ -238,14 +238,20 @@ const decreaseQuantity = (itemId) => {
   }
 };
 const handleCheckoutForGuest = async () => {
+    isLoading.value = true;
+
   const checkoutData = {
-    table_id: table_id, // замените на реальный ID адреса
-    dishes: cartI.items.map((item) => ({
+    table_id: Number(localStorage.getItem('selectedTable')), // замените на реальный ID адреса
+    order_dishes: cartI.items.map((item) => ({
       dish_id: item.id,
       quantity: item.quantity || 1, // или другое поле, если у тебя есть quantity
     })),
   };
-  isLoading.value = true;
+  if (!table_id) {
+    console.error("❌ Не найден table_id!");
+    fail.value = true;
+    return;
+  }
 
   try {
     const response = await axios.post(
@@ -268,9 +274,10 @@ const handleCheckoutForGuest = async () => {
     isLoading.value = false;
   }
 };
+console.log(store.address[0].id)
 const handleCheckout = async () => {
   const checkoutData = {
-    address_id: 1, // замените на реальный ID адреса
+    address_id: store.address[0].id, // замените на реальный ID адреса
     dishes: cartI.items.map((item) => ({
       dish_id: item.id,
       quantity: item.quantity || 1, // или другое поле, если у тебя есть quantity
@@ -300,11 +307,22 @@ const handleCheckout = async () => {
       "❌ Ошибка при оформлении заказа:",
       error.response?.data || error.message
     );
-    fail.value = true;
+    // fail.value = true;
   } finally {
     isLoading.value = false;
   }
 };
+const makeCheckout = () =>{
+if (role == 'guest'){
+  handleCheckoutForGuest()
+} else{
+  handleCheckout()
+}
+}
+watch(address, (newVal) => {
+  store.address = [{ address: newVal[0].address }];
+});
+
 </script>
 
 <style scoped>

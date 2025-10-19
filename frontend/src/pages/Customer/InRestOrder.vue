@@ -148,18 +148,12 @@
         </div>
       </div>
     </header>
-
-    <!-- Address Modal -->
-
-    <!-- Main Content -->
     <MenuInterface />
   </div>
 </template>
 
 <script setup>
 import { onMounted, ref, computed } from "vue";
-import { useRouter, useRoute } from "vue-router";
-import Map from "../MainPage/Map.vue";
 import MenuInterface from "../../components/MenuInterface.vue";
 import {
   Search as SearchIcon,
@@ -168,13 +162,9 @@ import {
   X as CrossIcon,
   Sofa as SofaIcon,
 } from "lucide-vue-next";
-import axios from "axios";
-const role = localStorage.getItem("userRole");
-// Reactive data
-const activeSection = ref("recommendations");
+
 const searchQuery = ref("");
 const showMobileSearch = ref(false);
-const router = useRouter();
 const address = ref([{ address: "" }]);
 const selectedAddress = ref("");
 
@@ -206,11 +196,9 @@ function saveTable() {
 }
 
 onMounted(() => {
-   localStorage.setItem('userRole', 'guest')
-  console.log('✅ Гостевая роль установлена')
+
   const saved = localStorage.getItem("selectedTable");
   if (saved) selectedTable.value = Number(saved);
-  
 });
 </script>
 

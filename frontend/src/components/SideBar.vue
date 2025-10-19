@@ -89,7 +89,7 @@ function toggleSidebar() {
 const menuItems = computed(() => [
   {
     label: "Главная",
-    to: userRole.value === "guest" ? "/GuestOrder" : "/CliMain",
+    to: userRole.value === "guest" ? "/guest/order" : "/CliMain",
     roles: ["admin", "customer", "guest"],
     icon: "line-md:home-md",
   },

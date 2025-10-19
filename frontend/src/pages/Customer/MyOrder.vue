@@ -1,6 +1,6 @@
 <template>
   <div
-    class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-6 px-4"
+    class="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800 py-6 px-4 animated-gradient"
   >
     <div class="max-w-4xl mx-auto">
       <!-- Header -->
@@ -10,7 +10,7 @@
         >
           Мои заказы
         </h1>
-        <p class="text-gray-600 text-lg">История ваших заказов в INJOO</p>
+        <p class="text-white text-lg">История ваших заказов в INJOO</p>
       </div>
 
       <!-- Orders List -->

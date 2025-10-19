@@ -9,14 +9,14 @@ import {
   Minus as MinusIcon,
   Pen as PenIcon,
 } from "lucide-vue-next";
-
+import Loader from "./Loader.vue";
 import { useCartStore } from "/src/stores/Basket.js";
 
 const filterName = ref(null);
 const isLoading = ref(false);
 const menu = ref([]);
 const scrollContainer = ref(null);
-const image_url = "${import.meta.env.VITE_API_BASE_URL}";
+const image_url = `${import.meta.env.VITE_API_BASE_URL}`;
 const cart = useCartStore();
 const role = localStorage.getItem("userRole");
 const editingDish = ref(null); // объект редактируемого блюда
@@ -40,7 +40,7 @@ const categories = ref([
   { id: "chicken_wings", name: "Крылышки куриные", icon: "/chicken.png" },
   { id: "pasta", name: "Паста", icon: "/pasta.svg" },
   { id: "fries", name: "Картофель фри", icon: "/fries.png" },
-])
+]);
 
 const toggleCart = (restaurant) => {
   cart.toggleItem(restaurant);
@@ -81,7 +81,9 @@ const getMenu = async () => {
   isLoading.value = true;
 
   try {
-    const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}menu/`);
+    const response = await axios.get(
+      `${import.meta.env.VITE_API_BASE_URL}menu/`
+    );
     menu.value = response.data;
   } catch (error) {
     console.error("Ошибка при получении меню:", error);
@@ -195,10 +197,9 @@ onMounted(() => {
 
 <template>
   <div class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
+    <Loader v-if="isLoading" />
     <div class="mb-6 sm:mb-8">
-      <div
-        class="flex gap-6 sm:gap-8 overflow-y-scroll"
-      >
+      <div class="flex gap-6 sm:gap-8 overflow-y-scroll">
         <div
           v-for="category in categories"
           :key="category.id"
@@ -222,7 +223,6 @@ onMounted(() => {
       </div>
     </div>
 
-    
     <!-- Restaurant Sections -->
     <div class="space-y-6 sm:space-y-8">
       <!-- Поздний перекус неподалёку -->
@@ -247,7 +247,6 @@ onMounted(() => {
           </div>
         </div>
         <Loader v-if="isLoading" />
-
         <div
           ref="scrollContainer"
           class="flex flex-wrap gap-3 sm:gap-4 lg:gap-6 overflow-x-auto scroll-smooth pb-2"
@@ -258,10 +257,10 @@ onMounted(() => {
             class="w-[280px] max-[650px]:w-[210px] max-[450px]:w-[170px] max-[400px]:w-[160px] max-[450px]:h-[260px] bg-gray-800/50 border border-gray-700 mx-auto rounded-lg overflow-hidden hover:bg-gray-800/70 transition-colors cursor-pointer flex-shrink-0 pt-2"
             @click="selectRestaurant(restaurant.id)"
           >
-            <div class="relative ">
+            <div class="relative">
               <div
                 class="absolute right-2 top-2 z-10"
-                v-if="role == 'customer' || 'guest'"
+                v-if="role === 'customer' || role === 'guest'"
               >
                 <ShoppingCartIcon
                   @click.stop="toggleCart(restaurant)"
@@ -271,26 +270,28 @@ onMounted(() => {
                   "
                 />
               </div>
-              <div class="absolute right-14 max-[450px]:right-8 max-[450px]:top-[10px] top-3 z-10" v-if="role == 'admin'">
+              <div
+                class="absolute right-14 max-[450px]:right-8 max-[450px]:top-[10px] top-3 z-10"
+                v-if="role == 'admin'"
+              >
                 <PenIcon
                   @click.stop="openEditModal(restaurant)"
-                  class="w-5 h-5 sm:w-6 sm:h-6 max-[450px]:h-[12px]  max-[450px]:w-[12px] cursor-pointer transition-colors text-white"
+                  class="w-5 h-5 sm:w-6 sm:h-6 max-[450px]:h-[12px] max-[450px]:w-[12px] cursor-pointer transition-colors text-white"
                 />
               </div>
               <div class="absolute right-2 top-2 z-10" v-if="role == 'admin'">
                 <div
-                  class="w-8 h-8 max-[450px]:h-4  max-[450px]:w-4 rounded-full bg-red-400 flex justify-center items-center"
+                  class="w-8 h-8 max-[450px]:h-4 max-[450px]:w-4 rounded-full bg-red-400 flex justify-center items-center"
                 >
                   <MinusIcon
                     @click.stop="deleteDish(restaurant.id)"
-                    class="w-5 h-5 sm:w-6 sm:h-6  max-[450px]:h-[12px]  max-[450px]:w-[12px] cursor-pointer transition-colors"
+                    class="w-5 h-5 sm:w-6 sm:h-6 max-[450px]:h-[12px] max-[450px]:w-[12px] cursor-pointer transition-colors"
                   />
                 </div>
               </div>
               <img
                 v-if="restaurant.images && restaurant.images.length"
-
-                :src="restaurant.images"
+                :src="image_url + restaurant.images[0].image_url"
                 :alt="restaurant.name"
                 class="h-[180px] max-[450px]:h-[145px] sm:h-[220px] lg:h-[300px] w-full object-cover"
               />
@@ -367,10 +368,20 @@ onMounted(() => {
             />
           </label>
 
-          <label class="block mb-2">
-            Категория:
-            <input v-model="editingDish.category" class="border p-1 w-full" />
-          </label>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Категория
+            </label>
+            <select
+              v-model="editingDish.category"
+              class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
+            >
+              <option disabled value="">Выберите категорию</option>
+              <option v-for="cat in categories" :key="cat.id" :value="cat.id">
+                {{ cat.name }}
+              </option>
+            </select>
+          </div>
 
           <label class="block mb-2">
             Изображение:

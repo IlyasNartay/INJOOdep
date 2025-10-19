@@ -74,7 +74,7 @@ const submitDish = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-100">
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800 animated-gradient">
     <div
       class="max-w-md w-full mx-6  bg-white shadow-xl rounded-2xl p-6 space-y-4"
     >

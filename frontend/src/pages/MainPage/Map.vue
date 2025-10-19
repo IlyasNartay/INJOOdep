@@ -289,8 +289,8 @@
 <script setup>
 import { ref, onMounted, watch } from "vue";
 import L from "leaflet";
-import { Icon } from "@iconify/vue";
 import CustomModal from "@/components/CustomModal.vue";
+import { useAddressStore } from "@/stores/addressStore";
 const suggestions = ref([]);
 const entrance = ref("");
 const floor = ref("");

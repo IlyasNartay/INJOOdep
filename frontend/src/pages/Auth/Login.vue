@@ -1,6 +1,6 @@
 <template>
   <div
-    class="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-blue-900 flex items-center justify-center p-4"
+    class="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-blue-900 flex items-center justify-center p-4 animated-gradient"
   >
     <div class="relative w-full max-w-sm">
       <div
@@ -121,7 +121,6 @@ const data = reactive({
   password: "",
   password: "",
 });
-
 const login = async () => {
   const details = {
     ...data,
@@ -133,7 +132,6 @@ const login = async () => {
     );
     const token = response.data.access_token;
     const user_role = response.data.user_role;
-
     if (token) {
       // Сохраняем токен в localStorage
       localStorage.setItem("authToken", token);

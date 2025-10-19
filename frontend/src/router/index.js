@@ -84,19 +84,37 @@ const router = createRouter({
     ],
   },
   {
-    path: "/guest",
-    component: SideBar,
-    meta: {
-      auth: false,
-    },
-    children: [
-      {
-        path: "/GuestOrder",
-        name: "GuestOrder",
-        component: InRestOrder,
-      },
-    ],
+  path: "/guest",
+  component: SideBar,
+  meta: {
+    auth: false,
   },
+  children: [
+    {
+      path: "order", // ← не обязательно писать /GuestOrder (иначе получится //guest//GuestOrder)
+      name: "GuestOrder",
+      component: InRestOrder,
+
+      beforeEnter: (to, from, next) => {
+        // Проверяем, есть ли роль
+        const role = localStorage.getItem('userRole');
+
+        if (!role || role !== 'guest') {
+          localStorage.setItem('userRole', 'guest');
+          console.log('✅ Гостевая роль установлена при входе на GuestOrder');
+        }
+
+        // Если в URL есть ?table=12 — сохраняем номер стола
+        if (to.query.table) {
+          localStorage.setItem('selectedTable', to.query.table);
+        }
+
+        next();
+      },
+    },
+  ],
+}
+
   ],
 })
 

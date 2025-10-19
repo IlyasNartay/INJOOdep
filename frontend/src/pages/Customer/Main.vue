@@ -1,6 +1,6 @@
 <template>
   <div
-    class="min-h-screen w-full bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800 relative"
+    class="min-h-screen w-full bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800 relative animated-gradient"
   >
 
     <header
@@ -21,7 +21,8 @@
               <span
                 class="text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none"
               >
-                {{ shortAddress(address[0]?.address) }}
+{{ shortAddress(address[0]?.address.full || address[0]?.address) }}
+
               </span>
               <ChevronDownIcon class="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
             </div>
@@ -45,7 +46,7 @@
               </div>
 
               <div class="flex-1">
-                <Map v-model:address="selectedAddress" />
+                <Map v-model:address="selectedAddress"/>
               </div>
             </div>
           </div>
@@ -107,14 +108,17 @@ import {
   X as CrossIcon,
 
 } from "lucide-vue-next";
+import { useAddressStore } from '@/stores/addressStore';
+
 // Reactive data
 const searchQuery = ref("");
 const showMobileSearch = ref(false);
-const address = ref([{ address: "" }]); // <-- есть address[0]
+const address = ref([{ address: '' }])
 const selectedAddress = ref("");
 
-
+const store = useAddressStore();
 const isModalOpen = ref(false);
+
 function openModal() {
   selectedAddress.value = address.value[0]?.address ?? "";
   isModalOpen.value = true;
@@ -135,18 +139,19 @@ const getAdress = async () => {
       },
     });
     address.value = response.data || "Введите адрес";
+        store.setAddress(address.value);
+
   } catch (error) {
     console.error("Ошибка при получении меню:", error);
   }
 };
-
 
 onMounted(() => {
   getAdress();
 });
 </script>
 
-<style scoped>
+<style >
 /* Custom scrollbar for webkit browsers */
 ::-webkit-scrollbar {
   width: 6px;
@@ -192,4 +197,23 @@ onMounted(() => {
     scrollbar-width: none;
   }
 }
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animated-gradient {
+  background: linear-gradient(-45deg, #2e1065, #3b0764, #7e22ce, #be185d);
+  background-size: 500% 500%;
+  animation: gradientMove 15s ease-in-out infinite;
+}
+
+
 </style>

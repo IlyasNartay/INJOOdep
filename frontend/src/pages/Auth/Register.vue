@@ -1,51 +1,7 @@
 <template>
-  <!-- <div class="min-h-screen flex items-center justify-center bg-gray-100">
-    <div class="bg-white p-6 rounded shadow w-96 space-y-4">
-      <h2 class="text-xl font-bold text-center">Регистрация</h2>
 
-      <input
-        v-model="data.full_name"
-        type="text"
-        placeholder="Имя"
-        class="w-full p-2 border rounded"
-      />
-      <input
-        v-model="data.email"
-        type="email"
-        placeholder="Email"
-        class="w-full p-2 border rounded"
-      />
-      <input
-        v-model="data.phone"
-        type="email"
-        placeholder="phone"
-        class="w-full p-2 border rounded"
-      />
-      <input
-        v-model="data.password"
-        type="password"
-        placeholder="Пароль"
-        class="w-full p-2 border rounded"
-      />
-      <Loader v-if="isLoading" />
-
-      <button
-        @click="regis"
-        class="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600"
-      >
-        Зарегистрироваться
-      </button>
-
-      <router-link
-        to="/login"
-        class="text-sm text-blue-500 block text-center hover:underline"
-      >
-        Уже есть аккаунт? Войти
-      </router-link>
-    </div>
-  </div> -->
   <div
-    class="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-blue-900 flex items-center justify-center p-4"
+    class="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-blue-900 flex items-center justify-center p-4 animated-gradient"
   >
     <!-- Glassmorphism Card -->
     <div class="relative w-full max-w-md">
