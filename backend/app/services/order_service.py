@@ -138,7 +138,6 @@ def create_table_order(order: schemas.TableOrderCreate, db: Session):
     db_order = models.TableOrder(
         table_id=order.table_id,
         total_price=total_price,
-        status="pending"
     )
     db.add(db_order)
     db.commit()
