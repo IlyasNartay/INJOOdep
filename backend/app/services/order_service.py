@@ -79,52 +79,6 @@ async def create_order(db: Session, order_data: schemas.OrderCreate, user: model
         ]
     )
 
-def get_order_by_id(db: Session, order_id: int) -> models.Order:
-    order = db.query(models.Order).filter(models.Order.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="Заказ не найден")
-    return order
-
-
-def update_order_status(db: Session, order_id: int, new_status: str) -> models.Order:
-    order = get_order_by_id(db, order_id)
-    order.status = new_status
-    db.commit()
-    db.refresh(order)
-    return order
-
-
-def get_my_orders(
-        db: Session,
-        current_user: models.User = Depends(get_current_user)
-):
-    try:
-        orders = db.query(models.Order).filter(models.Order.user_id == current_user.id).all()
-
-        return [schemas.OrderRead.model_validate(order, from_attributes=True) for order in orders]
-    except Exception as e:
-        print("Ошибка при получении заказов:", e)
-        raise HTTPException(status_code=500, detail=str(e))
-
-from sqlalchemy.orm import Session
-from app import models, schemas
-import requests
-import os
-
-TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
-CHAT_ID = os.getenv("KITCHEN_CHAT_ID")
-
-def send_to_telegram(order, total_price: float):
-    text = f"🍽 Новый заказ со стола #{order.table_id}\n"
-    text += f"Сумма: {total_price} тг\n"
-    text += "Блюда:\n"
-    for d in order.order_dishes:
-        text += f"— ID {d.dish_id}, x{d.quantity}\n"
-
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    requests.post(url, json={"chat_id": CHAT_ID, "text": text})
-
-
 async def create_table_order(tableOrder: schemas.TableOrderCreate, db: Session):
     # 1. Считаем сумму
     total_price = 0
@@ -153,10 +107,72 @@ async def create_table_order(tableOrder: schemas.TableOrderCreate, db: Session):
         db.add(db_order_dish)
     db.commit()
 
+    # Готовим данные для отправки в Telegram
+    return_data = {
+        "id": db_table_order.id,
+        "table_id": db_table_order.table_id,
+        "dishes": [
+            {
+                "id": d.id,
+                "name": d.name,
+                "price": d.price,
+                "quantity": next(item.quantity for item in tableOrder.dishes if item.dish_id == d.id)
+            }
+            for d in dishes
+        ],
+        "total_price": db_table_order.total_price,
+    }
+
     try:
         await send_order_to_kitchen(return_data)
     except Exception as e:
         print(f"⚠️ Ошибка при отправке в Telegram (не критично): {e}")
 
     return db_table_order
+
+
+def get_order_by_id(db: Session, order_id: int) -> models.Order:
+    order = db.query(models.Order).filter(models.Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Заказ не найден")
+    return order
+
+
+def update_order_status(db: Session, order_id: int, new_status: str) -> models.Order:
+    order = get_order_by_id(db, order_id)
+    order.status = new_status
+    db.commit()
+    db.refresh(order)
+    return order
+
+def get_my_orders(
+        db: Session,
+        current_user: models.User = Depends(get_current_user)
+):
+    try:
+        orders = db.query(models.Order).filter(models.Order.user_id == current_user.id).all()
+
+        return [schemas.OrderRead.model_validate(order, from_attributes=True) for order in orders]
+    except Exception as e:
+        print("Ошибка при получении заказов:", e)
+        raise HTTPException(status_code=500, detail=str(e))
+from sqlalchemy.orm import Session
+from app import models, schemas
+import requests
+
+import os
+TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+CHAT_ID = os.getenv("KITCHEN_CHAT_ID")
+
+
+def send_to_telegram(order, total_price: float):
+    text = f"🍽 Новый заказ со стола #{order.table_id}\n"
+    text += f"Сумма: {total_price} тг\n"
+    text += "Блюда:\n"
+    for d in order.order_dishes:
+        text += f"— ID {d.dish_id}, x{d.quantity}\n"
+
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    requests.post(url, json={"chat_id": CHAT_ID, "text": text})
 
