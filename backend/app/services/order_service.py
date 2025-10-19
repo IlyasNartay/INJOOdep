@@ -113,7 +113,7 @@ async def create_table_order(order_data: schemas.TableOrderCreate, db: Session):
     # Готовим данные для отправки в Telegram
     return_data = {
         "id": order.id,
-        "table_id": order.tabel_id,
+        "table_id": order.table_id,
         "dishes": [
             {
                 "id": d.id,
