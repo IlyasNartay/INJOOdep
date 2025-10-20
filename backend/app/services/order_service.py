@@ -7,6 +7,9 @@ import asyncio
 from telegram_bot.handlers import send_order_to_kitchen
 from app.deps import get_current_user
 
+from telegram_bot.handlers import send_table_order_to_kitchen
+
+
 async def create_order(db: Session, order_data: schemas.OrderCreate, user: models.User) -> schemas.OrderRead:
     dish_ids = [item.dish_id for item in order_data.dishes]
     dishes = db.query(models.Dish).filter(models.Dish.id.in_(dish_ids)).all()
@@ -134,14 +137,14 @@ async def create_table_order(order_data: schemas.TableOrderCreate, db: Session):
 
     return schemas.TableOrderRead(
         id=order.id,
-        table_id=order.address_id,
+        table_id=order.table_id,
         total_price=order.total_price,
         order_dishes=[
             schemas.OrderDishRead(
                 dish=schemas.DishRead.model_validate(od.dish),
                 quantity=od.quantity
             )
-            for od in order.order_dishes
+            for od in order.dishes
         ]
     )
 
