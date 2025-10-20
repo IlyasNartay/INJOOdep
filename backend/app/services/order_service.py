@@ -1,15 +1,17 @@
 # app/services/order_service.py
-from pandas.plotting import table
 from sqlalchemy.orm import Session
 from app import models, schemas
 from fastapi import HTTPException, Depends
-import asyncio
-from telegram_bot.handlers import send_order_to_kitchen
 from app.deps import get_current_user
+import asyncio
 
-from telegram_bot.handlers import send_table_order_to_kitchen
+# Импорт Telegram-хендлеров
+from telegram_bot.handlers import send_order_to_kitchen, send_table_order_to_kitchen
 
 
+# ===============================
+# 🧾 Создание обычного заказа
+# ===============================
 async def create_order(db: Session, order_data: schemas.OrderCreate, user: models.User) -> schemas.OrderRead:
     dish_ids = [item.dish_id for item in order_data.dishes]
     dishes = db.query(models.Dish).filter(models.Dish.id.in_(dish_ids)).all()
@@ -17,6 +19,7 @@ async def create_order(db: Session, order_data: schemas.OrderCreate, user: model
     if len(dishes) != len(dish_ids):
         raise HTTPException(status_code=400, detail="Некоторые блюда не найдены")
 
+    # Создаем заказ
     order = models.Order(
         user_id=user.id,
         address_id=order_data.address_id,
@@ -43,7 +46,7 @@ async def create_order(db: Session, order_data: schemas.OrderCreate, user: model
     db.commit()
     db.refresh(order)
 
-    # Готовим данные для отправки в Telegram
+    # Формируем данные для отправки в Telegram
     return_data = {
         "id": order.id,
         "user_id": order.user_id,
@@ -61,7 +64,7 @@ async def create_order(db: Session, order_data: schemas.OrderCreate, user: model
         "status": order.status
     }
 
-    # 🔁 ВРЕМЕННО отправляем напрямую, чтобы видеть ошибки/логи
+    # 🔁 Отправляем в Telegram
     try:
         await send_order_to_kitchen(return_data)
     except Exception as e:
@@ -82,7 +85,11 @@ async def create_order(db: Session, order_data: schemas.OrderCreate, user: model
         ]
     )
 
-async def create_table_order(order_data: schemas.TableOrderCreate, db: Session):
+
+# ===============================
+# 🍽 Создание заказа для стола
+# ===============================
+async def create_table_order(order_data: schemas.TableOrderCreate, db: Session) -> schemas.TableOrderRead:
     dish_ids = [item.dish_id for item in order_data.dishes]
     dishes = db.query(models.Dish).filter(models.Dish.id.in_(dish_ids)).all()
 
@@ -113,7 +120,7 @@ async def create_table_order(order_data: schemas.TableOrderCreate, db: Session):
     db.commit()
     db.refresh(order)
 
-    # Готовим данные для отправки в Telegram
+    # Формируем данные для Telegram
     return_data = {
         "id": order.id,
         "table_id": order.table_id,
@@ -129,7 +136,7 @@ async def create_table_order(order_data: schemas.TableOrderCreate, db: Session):
         "total_price": order.total_price,
     }
 
-    # 🔁 ВРЕМЕННО отправляем напрямую, чтобы видеть ошибки/логи
+    # 🔁 Отправляем в Telegram
     try:
         await send_table_order_to_kitchen(return_data)
     except Exception as e:
@@ -149,6 +156,9 @@ async def create_table_order(order_data: schemas.TableOrderCreate, db: Session):
     )
 
 
+# ===============================
+# 🔍 Получение / обновление заказов
+# ===============================
 def get_order_by_id(db: Session, order_id: int) -> models.Order:
     order = db.query(models.Order).filter(models.Order.id == order_id).first()
     if not order:
@@ -163,34 +173,17 @@ def update_order_status(db: Session, order_id: int, new_status: str) -> models.O
     db.refresh(order)
     return order
 
+
+# ===============================
+# 👤 Получение заказов текущего пользователя
+# ===============================
 def get_my_orders(
-        db: Session,
-        current_user: models.User = Depends(get_current_user)
+    db: Session,
+    current_user: models.User = Depends(get_current_user)
 ):
     try:
         orders = db.query(models.Order).filter(models.Order.user_id == current_user.id).all()
-
         return [schemas.OrderRead.model_validate(order, from_attributes=True) for order in orders]
     except Exception as e:
         print("Ошибка при получении заказов:", e)
         raise HTTPException(status_code=500, detail=str(e))
-from sqlalchemy.orm import Session
-from app import models, schemas
-import requests
-
-import os
-TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
-
-CHAT_ID = os.getenv("KITCHEN_CHAT_ID")
-
-
-def send_to_telegram(order, total_price: float):
-    text = f"🍽 Новый заказ со стола #{order.table_id}\n"
-    text += f"Сумма: {total_price} тг\n"
-    text += "Блюда:\n"
-    for d in order.order_dishes:
-        text += f"— ID {d.dish_id}, x{d.quantity}\n"
-
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    requests.post(url, json={"chat_id": CHAT_ID, "text": text})
-
