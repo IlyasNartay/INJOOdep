@@ -8,5 +8,12 @@
       <jdbc-url>jdbc:postgresql://195.49.210.201:5433/injoo_db</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="injoo_db@34.124.178.31" uuid="3012a26d-b3b1-4ed8-afbd-9cd409c86715">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://34.124.178.31:5433/injoo_db</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>
