@@ -10,8 +10,9 @@ from aiogram.types import InlineKeyboardMarkup as AioInlineKeyboardMarkup
 REGISTER_CODES = {
     "kitchen123": "kitchen",
     "courier456": "courier",
-    "admin1789" : "admin",
+    "admin1789": "admin",
 }
+
 
 # =========================================================================
 # ФУНКЦИЯ: ОТПРАВКА ЗАКАЗА АДМИНИСТРАТОРУ НА ПОДТВЕРЖДЕНИЕ
@@ -30,7 +31,8 @@ async def send_order_to_admin(order_data: dict):
             try:
                 # Предполагаем, что dish - это словарь или объект с атрибутами
                 name = dish.get("name", "неизвестно") if isinstance(dish, dict) else getattr(dish, "name", "неизвестно")
-                quantity = dish.get("quantity", "неизвестно") if isinstance(dish, dict) else getattr(dish, "quantity", "неизвестно")
+                quantity = dish.get("quantity", "неизвестно") if isinstance(dish, dict) else getattr(dish, "quantity",
+                                                                                                     "неизвестно")
                 dish_lines.append(f"  — {name} × {quantity}")
             except Exception as e:
                 print(f"⚠️ Ошибка при разборе блюда: {dish} — {e}")
@@ -57,7 +59,8 @@ async def send_order_to_admin(order_data: dict):
         # ИСПРАВЛЕНО: Передаем только order_id, чтобы избежать ошибки BUTTON_DATA_INVALID.
         markup = AioInlineKeyboardMarkup(
             inline_keyboard=[
-                [AioInlineKeyboardButton(text="✅ Подтвердить и отправить на кухню", callback_data=f"admin_confirm:{order_data['id']}")]
+                [AioInlineKeyboardButton(text="✅ Подтвердить и отправить на кухню",
+                                         callback_data=f"admin_confirm:{order_data['id']}")]
             ]
         )
 
@@ -89,7 +92,7 @@ async def send_order_to_admin(order_data: dict):
 # =========================================================================
 # ФУНКЦИЯ: ОТПРАВКА ЗАКАЗА НА КУХНЮ
 # =========================================================================
-async def send_order_to_kitchen(order_id: dict):
+async def send_order_to_kitchen(order_id: int):
     """Отправляет подтвержденный заказ на кухню."""
     db = SessionLocal()
     try:
@@ -113,15 +116,27 @@ async def send_order_to_kitchen(order_id: dict):
             "status": order.status
         }
 
-        # 3. Формируем сообщение
+        # 1. Получаем адрес
+        address = db.query(Address).filter(Address.id == order_data['address_id']).first()
+        address_text = address.full_address() if address else "Адрес не найден"
+
+        # 2. Формируем список блюд (ИСПРАВЛЕНО)
+        dish_lines = []
+        for dish in order_data.get("dishes", []):
+            name = dish.get("name")
+            quantity = dish.get("quantity")
+            dish_lines.append(f"  — {name} × {quantity}")
+
+        # 3. Формируем сообщение (ИСПРАВЛЕНО: используем dish_lines и включаем адрес)
         message = (
                 f"🧾 <b>Новый заказ #{order_data['id']}</b>\n\n"
                 f"👤 <b>Пользователь ID:</b> <code>{order_data['user_id']}</code>\n"
+                f"📍 <b>Адрес:</b> {address_text}\n"  # Добавлен адрес
                 f"💰 <b>Сумма:</b> {order_data['total_price']} ₸\n"
                 f"📦 <b>Статус:</b> <i>{order_data['status']}</i>\n\n"
                 f"🍽 <b>Блюда:</b>\n"
                 f"  =====================\n" +  # Верхний разделитель внутри блока
-                "\n".join(dishes) +
+                "\n".join(dish_lines) +  # ИСПРАВЛЕНО: используем список строк
                 f"\n  ====================="  # Нижний разделитель внутри блока
         )
 
@@ -155,6 +170,7 @@ async def send_order_to_kitchen(order_id: dict):
         print(f"💥 Ошибка в send_order_to_kitchen: {global_error}")
     finally:
         db.close()
+
 
 # =========================================================================
 # ФУНКЦИЯ: ОТПРАВКА ЗАКАЗА СО СТОЛА НА КУХНЮ (Без адреса)
@@ -210,6 +226,7 @@ async def send_table_order_to_kitchen(order_data: dict):
     finally:
         db.close()
 
+
 # =========================================================================
 # ОБРАБОТЧИК: ПОДТВЕРЖДЕНИЕ ЗАКАЗА АДМИНИСТРАТОРОМ
 # =========================================================================
@@ -242,7 +259,6 @@ async def confirm_order(callback: CallbackQuery):
         # 1. Обновляем статус заказа в базе данных
         order.status = "accepted"
         db.commit()
-
 
         # 3. Отправляем заказ на кухню
         await send_order_to_kitchen(order_id)
@@ -289,6 +305,7 @@ async def handle_registration(message: Message):
             await message.reply(f"🔒 Вы уже зарегистрированы как {user.role}")
     finally:
         db.close()
+
 
 # =========================================================================
 # ОБРАБОТЧИК: КНОПКА "ГОТОВО" ОТ КУХНИ
@@ -348,6 +365,7 @@ async def order_ready(callback: CallbackQuery):
 
     finally:
         db.close()
+
 
 # =========================================================================
 # ОБРАБОТЧИК: КНОПКА "ДОСТАВЛЕНО" ОТ КУРЬЕРА
