@@ -256,7 +256,7 @@ async def confirm_order(callback: CallbackQuery):
             'address_id': order.address_id,
             'total_price': order.total_price,
             'status': order.status, # 'confirmed'
-            'dishes': order.dishes
+            'dishes': order.order_dishes
         }
 
         # 3. Отправляем заказ на кухню
