@@ -26,7 +26,7 @@ async def send_order_to_admin(order_data: dict):
 
         # 2. Формируем список блюд
         dish_lines = []
-        for dish in order_data.get("dishes", []):
+        for dish in order_data.get("order_dishes", []):
             try:
                 # Предполагаем, что dish - это словарь или объект с атрибутами
                 name = dish.get("name", "неизвестно") if isinstance(dish, dict) else getattr(dish, "name", "неизвестно")
@@ -54,9 +54,10 @@ async def send_order_to_admin(order_data: dict):
         # 4. Inline-кнопка для подтверждения
         # ВНИМАНИЕ: Передача всей переменной 'message' в callback_data
         # может вызвать ошибку "Callback data is too long" (лимит 64 байта).
+        # ИСПРАВЛЕНО: Передаем только order_id, чтобы избежать ошибки BUTTON_DATA_INVALID.
         markup = AioInlineKeyboardMarkup(
             inline_keyboard=[
-                [AioInlineKeyboardButton(text="✅ Подтвердить и отправить на кухню", callback_data=f"admin_confirm:{order_data['id'],message}")]
+                [AioInlineKeyboardButton(text="✅ Подтвердить и отправить на кухню", callback_data=f"admin_confirm:{order_data['id']}")]
             ]
         )
 
@@ -105,7 +106,7 @@ async def send_order_to_kitchen(order_data: dict):
 
         # 2. Формируем список блюд
         dish_lines = []
-        for dish in order_data.get("dishes", []):
+        for dish in order_data.get("order_dishes", []):
             try:
                 name = dish.get("name") if isinstance(dish, dict) else getattr(dish, "name", "неизвестно")
                 quantity = dish.get("quantity") if isinstance(dish, dict) else getattr(dish, "quantity", "неизвестно")
@@ -223,9 +224,10 @@ async def confirm_order(callback: CallbackQuery):
     """Обрабатывает нажатие кнопки подтверждения заказа администратором.
     После подтверждения отправляет заказ на кухню."""
     chat_id = str(callback.from_user.id)
-    # Извлекаем ID из callback_data, игнорируя остальную часть строки (f"...:{id,message}")
+    # Извлекаем ID из callback_data (формат: admin_confirm:ID)
     try:
-        order_id = int(callback.data.split(":")[1].split(',')[0])
+        # Теперь data.split(":") вернет ['admin_confirm', 'ID']
+        order_id = int(callback.data.split(":")[1])
     except Exception:
         # Fallback, если формат ID нарушен
         await callback.answer("❌ Неверный формат ID заказа.", show_alert=True)
