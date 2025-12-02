@@ -261,7 +261,7 @@ async def confirm_order(callback: CallbackQuery):
                     "id": d.id,
                     "name": d.name,
                     "price": d.price,
-                    "quantity": next(item.quantity for item in order_data.dishes if item.dish_id == d.id)
+                    "quantity": next(item.quantity for item in order.dishes if item.dish_id == d.id)
                 }
                 for d in order.order_dishes
             ],
