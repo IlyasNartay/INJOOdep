@@ -6,7 +6,7 @@ from app.deps import get_current_user
 import asyncio
 
 # Импорт Telegram-хендлеров
-from telegram_bot.handlers import send_order_to_kitchen, send_table_order_to_kitchen
+from telegram_bot.handlers import send_order_to_admin, send_table_order_to_kitchen
 
 
 # ===============================
@@ -67,7 +67,7 @@ async def create_order(db: Session, order_data: schemas.OrderCreate, user: model
 
     # 🔁 Отправляем в Telegram
     try:
-        await send_order_to_kitchen(return_data)
+        await send_order_to_admin(return_data)
     except Exception as e:
         print(f"⚠️ Ошибка при отправке в Telegram (не критично): {e}")
 
