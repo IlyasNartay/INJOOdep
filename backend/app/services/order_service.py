@@ -74,6 +74,7 @@ async def create_order(db: Session, order_data: schemas.OrderCreate, user: model
     return schemas.OrderRead(
         id=order.id,
         user_id=order.user_id,
+        kaspi_number=order_data.kaspi_number,
         address_id=order.address_id,
         total_price=order.total_price,
         status=order.status,
