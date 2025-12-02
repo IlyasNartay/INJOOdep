@@ -89,46 +89,40 @@ async def send_order_to_admin(order_data: dict):
 # =========================================================================
 # ФУНКЦИЯ: ОТПРАВКА ЗАКАЗА НА КУХНЮ
 # =========================================================================
-async def send_order_to_kitchen(order_data: dict):
+async def send_order_to_kitchen(order_id: dict):
     """Отправляет подтвержденный заказ на кухню."""
     db = SessionLocal()
     try:
-        # 1. Получаем адрес
-        address = db.query(Address).filter(Address.id == order_data['address_id']).first()
-        if not address:
-            address_text = "Адрес не найден"
-        else:
-            try:
-                address_text = address.full_address()
-            except Exception as e:
-                print(f"⚠️ Ошибка при вызове address.full_address(): {e}")
-                address_text = "Ошибка адреса"
-
-        # 2. Формируем список блюд
-        dish_lines = []
-        for dish in order_data.get("dishes", []):
-            try:
-                name = dish.get("name") if isinstance(dish, dict) else getattr(dish, "name", "неизвестно")
-                quantity = dish.get("quantity") if isinstance(dish, dict) else getattr(dish, "quantity", "неизвестно")
-                # Добавляем отступ и маркер для каждой строки
-                dish_lines.append(f"  — {name} × {quantity}")
-            except Exception as e:
-                print(f"⚠️ Ошибка при разборе блюда: {dish} — {e}")
-                continue
+        order = db.query(Order).filter(Order.id == order_id).first()
+        dish_ids = [item.dish_id for item in order.order_dishes]
+        dishes = db.query(Dish).filter(Dish.id.in_(dish_ids)).all()
+        order_data = {
+            "id": order.id,
+            "user_id": order.user_id,
+            "address_id": order.address_id,
+            "dishes": [
+                {
+                    "id": d.id,
+                    "name": d.name,
+                    "price": d.price,
+                    "quantity": next(item.quantity for item in order.order_dishes if item.dish_id == d.id)
+                }
+                for d in dishes
+            ],
+            "total_price": order.total_price,
+            "status": order.status
+        }
 
         # 3. Формируем сообщение
         message = (
                 f"🧾 <b>Новый заказ #{order_data['id']}</b>\n\n"
                 f"👤 <b>Пользователь ID:</b> <code>{order_data['user_id']}</code>\n"
-                f"📍 <b>Адрес:</b> {address_text}\n"
                 f"💰 <b>Сумма:</b> {order_data['total_price']} ₸\n"
                 f"📦 <b>Статус:</b> <i>{order_data['status']}</i>\n\n"
                 f"🍽 <b>Блюда:</b>\n"
-                f"```\n" +
                 f"  =====================\n" +  # Верхний разделитель внутри блока
-                "\n".join(dish_lines) +
-                f"\n  =====================" +  # Нижний разделитель внутри блока
-                "\n```"
+                "\n".join(dishes) +
+                f"\n  ====================="  # Нижний разделитель внутри блока
         )
 
         # 4. Inline-кнопка
@@ -248,28 +242,10 @@ async def confirm_order(callback: CallbackQuery):
         # 1. Обновляем статус заказа в базе данных
         order.status = "accepted"
         db.commit()
-        dish_ids = [item.dish_id for item in order.order_dishes]
-        dishes = db.query(Dish).filter(Dish.id.in_(dish_ids)).all()
-        # 2. Формируем словарь order_data для отправки на кухню
-        order_dict = {
-            'id': order.id,
-            'user_id': order.user_id,
-            'address_id': order.address_id,
-            'total_price': order.total_price,
-            'status': order.status, # 'confirmed'
-            "dishes": [
-                {
-                    "id": d.id,
-                    "name": d.name,
-                    "price": d.price,
-                    "quantity": next(item.quantity for item in order.order_dishes if item.dish_id == d.id)
-                }
-                for d in dishes
-            ],
-        }
+
 
         # 3. Отправляем заказ на кухню
-        await send_order_to_kitchen(order_dict)
+        await send_order_to_kitchen(order_id)
 
         # 4. Редактируем сообщение администратора
         await callback.message.edit_text(
