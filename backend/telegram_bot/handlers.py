@@ -258,7 +258,6 @@ async def confirm_order(callback: CallbackQuery):
             'status': order.status, # 'confirmed'
             "dishes": [
                 {
-                    "id": d.id,
                     "name": d.name,
                     "price": d.price,
                     "quantity": next(item.quantity for item in order.dishes if item.dish_id == d.id)
