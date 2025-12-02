@@ -13,6 +13,7 @@ class OrderCreate(BaseModel):
 
 class OrderDishRead(BaseModel):
     dish: DishRead
+    kaspi_number: str
     quantity: int
 
     model_config = {
