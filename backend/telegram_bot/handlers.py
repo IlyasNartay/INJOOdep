@@ -248,7 +248,7 @@ async def confirm_order(callback: CallbackQuery):
         # 1. Обновляем статус заказа в базе данных
         order.status = "accepted"
         db.commit()
-        dish_ids = [item.dish_id for item in order.dishes]
+        dish_ids = [item.dish_id for item in order.order_dishes]
         dishes = db.query(Dish).filter(Dish.id.in_(dish_ids)).all()
         # 2. Формируем словарь order_data для отправки на кухню
         order_dict = {
@@ -262,7 +262,7 @@ async def confirm_order(callback: CallbackQuery):
                     "id": d.id,
                     "name": d.name,
                     "price": d.price,
-                    "quantity": next(item.quantity for item in order.dishes if item.dish_id == d.id)
+                    "quantity": next(item.quantity for item in order.order_dishes if item.dish_id == d.id)
                 }
                 for d in dishes
             ],
