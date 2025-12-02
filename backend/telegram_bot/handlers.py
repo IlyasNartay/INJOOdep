@@ -7,8 +7,79 @@ from aiogram.types import InlineKeyboardMarkup as AioInlineKeyboardMarkup
 
 REGISTER_CODES = {
     "kitchen123": "kitchen",
-    "courier456": "courier"
+    "courier456": "courier",
+    "admin1789" : "admin",
 }
+
+# =========================================================================
+# НОВАЯ ФУНКЦИЯ: ОТПРАВКА ЗАКАЗА АДМИНИСТРАТОРУ НА ПОДТВЕРЖДЕНИЕ
+# =========================================================================
+async def send_order_to_admin(order_data: dict):
+    """Отправляет новый заказ администраторам для первичного подтверждения."""
+    db = SessionLocal()
+    try:
+        # 1. Получаем адрес
+        address = db.query(Address).filter(Address.id == order_data.get('address_id')).first()
+        address_text = address.full_address() if address else "Адрес не найден"
+
+        # 2. Формируем список блюд
+        dish_lines = []
+        for dish in order_data.get("dishes", []):
+            try:
+                # Предполагаем, что dish - это словарь или объект с атрибутами
+                name = dish.get("name", "неизвестно") if isinstance(dish, dict) else getattr(dish, "name", "неизвестно")
+                quantity = dish.get("quantity", "неизвестно") if isinstance(dish, dict) else getattr(dish, "quantity", "неизвестно")
+                dish_lines.append(f"  — {name} × {quantity}")
+            except Exception as e:
+                print(f"⚠️ Ошибка при разборе блюда: {dish} — {e}")
+                continue
+
+        # 3. Формируем сообщение
+        message = (
+                f"🚨 <b>НОВЫЙ ЗАКАЗ (Требует подтверждения) #{order_data['id']}</b>\n\n"
+                f"👤 <b>Пользователь ID:</b> <code>{order_data['user_id']}</code>\n"
+                f"📍 <b>Адрес:</b> {address_text}\n"
+                f"💰 <b>Сумма:</b> {order_data['total_price']} ₸\n"
+                f"📦 <b>Статус:</b> <i>Ожидает подтверждения</i>\n\n"
+                f"🍽 <b>Блюда:</b>\n"
+                f"```\n" +
+                f"  =====================\n" +  # Верхний разделитель внутри блока
+                "\n".join(dish_lines) +
+                f"\n  =====================" +  # Нижний разделитель внутри блока
+                "\n```"
+        )
+
+        # 4. Inline-кнопка для подтверждения
+        markup = AioInlineKeyboardMarkup(
+            inline_keyboard=[
+                [AioInlineKeyboardButton(text="✅ Подтвердить и отправить на кухню", callback_data=f"admin_confirm:{order_data['id']}")]
+            ]
+        )
+
+        # 5. Отправка всем администраторам
+        admins = db.query(TelegramUser).filter(TelegramUser.role == "admin").all()
+        print(f"🔔 Администраторов найдено: {len(admins)}")
+
+        for admin in admins:
+            if not admin.chat_id:
+                print(f"⚠️ У администратора с id={admin.id} отсутствует chat_id")
+                continue
+            try:
+                print(f"📤 Отправка сообщения администратору chat_id={admin.chat_id}")
+                await bot.send_message(
+                    chat_id=int(admin.chat_id),
+                    text=message,
+                    reply_markup=markup,
+                    parse_mode="HTML"
+                )
+            except Exception as e:
+                print(f"❌ Ошибка отправки сообщения администратору {admin.chat_id}: {e}")
+
+    except Exception as global_error:
+        print(f"💥 Ошибка в send_order_to_admin: {global_error}")
+    finally:
+        db.close()
+
 
 async def send_order_to_kitchen(order_data: dict):
     db = SessionLocal()
@@ -36,9 +107,8 @@ async def send_order_to_kitchen(order_data: dict):
                 print(f"⚠️ Ошибка при разборе блюда: {dish} — {e}")
                 continue
 
-        # Определим разделитель, который будет служить верхней и нижней "рамкой"
-        separator = "━━━━━━━"  # Вы можете использовать: "=========" или "—————————"
-
+        # 3. Формируем сообщение
+        # Обратите внимание: статус теперь может быть 'confirmed' (если пришло через админа)
         message = (
                 f"🧾 <b>Новый заказ #{order_data['id']}</b>\n\n"
                 f"👤 <b>Пользователь ID:</b> <code>{order_data['user_id']}</code>\n"
@@ -136,6 +206,63 @@ async def send_table_order_to_kitchen(order_data: dict):
         print(f"💥 Ошибка в send_order_to_kitchen: {global_error}")
     finally:
         db.close()
+
+# =========================================================================
+# НОВЫЙ ОБРАБОТЧИК: ПОДТВЕРЖДЕНИЕ ЗАКАЗА АДМИНИСТРАТОРОМ
+# =========================================================================
+@dp.callback_query(lambda c: c.data.startswith("admin_confirm:"))
+async def confirm_order(callback: CallbackQuery):
+    """Обрабатывает нажатие кнопки подтверждения заказа администратором.
+    После подтверждения отправляет заказ на кухню."""
+    chat_id = str(callback.from_user.id)
+    order_id = int(callback.data.split(":")[1])
+
+    db = SessionLocal()
+    try:
+        user = db.query(TelegramUser).filter(TelegramUser.chat_id == chat_id).first()
+        if not user or user.role != "admin":
+            await callback.answer("❌ Только администратор может это делать.", show_alert=True)
+            return
+
+        order = db.query(Order).filter(Order.id == order_id).first()
+        if not order:
+            await callback.answer("❌ Заказ не найден.", show_alert=True)
+            return
+
+        # 1. Обновляем статус заказа в базе данных
+        order.status = "confirmed"
+        db.commit()
+
+        # 2. Формируем словарь order_data для отправки на кухню
+        # В реальном приложении нужно убедиться, что все поля доступны
+        order_dict = {
+            'id': order.id,
+            'user_id': order.user_id,
+            'address_id': order.address_id,
+            'total_price': order.total_price,
+            'status': order.status, # 'confirmed'
+            # Предполагаем, что order.dishes содержит нужный список для итерации
+            'dishes': order.dishes
+        }
+
+        # 3. Отправляем заказ на кухню
+        await send_order_to_kitchen(order_dict)
+
+        # 4. Редактируем сообщение администратора
+        await callback.message.edit_text(
+            f"✅ <b>Заказ #{order_id} ПОДТВЕРЖДЕН.</b>\n\n"
+            f"Сообщение успешно отправлено на кухню.",
+            reply_markup=None,
+            parse_mode="HTML"
+        )
+        await callback.answer("✅ Заказ подтвержден и отправлен на кухню.")
+
+    except Exception as global_error:
+        print(f"💥 Ошибка в confirm_order: {global_error}")
+        await callback.answer("❌ Произошла ошибка при подтверждении заказа.")
+    finally:
+        db.close()
+
 
 # Регистрация по коду
 @dp.message()

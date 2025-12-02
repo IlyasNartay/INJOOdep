@@ -24,7 +24,8 @@ async def create_order(db: Session, order_data: schemas.OrderCreate, user: model
         user_id=user.id,
         address_id=order_data.address_id,
         status=models.OrderStatus.pending,
-        total_price=0
+        total_price=0,
+        kaspi_number=order_data.kaspi_number,
     )
 
     total_price = 0

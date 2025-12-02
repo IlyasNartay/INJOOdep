@@ -8,6 +8,7 @@ class DishInOrder(BaseModel):
 
 class OrderCreate(BaseModel):
     address_id: int
+    kaspi_number: str
     dishes: List[DishInOrder]
 
 class OrderDishRead(BaseModel):
@@ -23,6 +24,7 @@ class OrderRead(BaseModel):
     user_id: int
     address_id: int
     total_price: float
+    kaspi_number: str
     status: str
     order_dishes: List[OrderDishRead]
 

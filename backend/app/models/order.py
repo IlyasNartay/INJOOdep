@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey, Float, Enum as SqlEnum
+from sqlalchemy import String,Column, Integer, ForeignKey, Float, Enum as SqlEnum
 from sqlalchemy.orm import relationship
 from app.database import Base
 from enum import Enum
@@ -27,6 +27,7 @@ class Order(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     address_id = Column(Integer, ForeignKey("addresses.id", ondelete="CASCADE"), nullable=False)
     status = Column(SqlEnum(OrderStatus), default=OrderStatus.pending, nullable=False)
+    kaspi_number = Column(String, nullable=False)
     total_price = Column(Float, nullable=False)
 
     user = relationship("User", back_populates="orders")
