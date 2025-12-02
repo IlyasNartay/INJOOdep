@@ -26,7 +26,7 @@ async def send_order_to_admin(order_data: dict):
 
         # 2. Формируем список блюд
         dish_lines = []
-        for dish in order_data.get("order_dishes", []):
+        for dish in order_data.get("dishes", []):
             try:
                 # Предполагаем, что dish - это словарь или объект с атрибутами
                 name = dish.get("name", "неизвестно") if isinstance(dish, dict) else getattr(dish, "name", "неизвестно")
@@ -106,7 +106,7 @@ async def send_order_to_kitchen(order_data: dict):
 
         # 2. Формируем список блюд
         dish_lines = []
-        for dish in order_data.get("order_dishes", []):
+        for dish in order_data.get("dishes", []):
             try:
                 name = dish.get("name") if isinstance(dish, dict) else getattr(dish, "name", "неизвестно")
                 quantity = dish.get("quantity") if isinstance(dish, dict) else getattr(dish, "quantity", "неизвестно")
