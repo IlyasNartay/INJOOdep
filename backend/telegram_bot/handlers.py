@@ -230,7 +230,7 @@ async def confirm_order(callback: CallbackQuery):
             return
 
         # 1. Обновляем статус заказа в базе данных
-        order.status = "confirmed"
+        order.status = "accepted"
         db.commit()
 
         # 2. Формируем словарь order_data для отправки на кухню
