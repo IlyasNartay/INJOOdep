@@ -1,7 +1,7 @@
 from telegram_bot.bot_instance import dp, bot
 from app.database import SessionLocal
 # Необходимые модели должны быть импортированы из вашего файла app.models
-from app.models import Order, TelegramUser, Address
+from app.models import Order, TelegramUser, Address, Dish
 from aiogram.types import CallbackQuery, Message
 from aiogram.types import InlineKeyboardButton as AioInlineKeyboardButton
 from aiogram.types import InlineKeyboardMarkup as AioInlineKeyboardMarkup
@@ -248,7 +248,8 @@ async def confirm_order(callback: CallbackQuery):
         # 1. Обновляем статус заказа в базе данных
         order.status = "accepted"
         db.commit()
-
+        dish_ids = [item.dish_id for item in order.dishes]
+        dishes = db.query(Dish).filter(Dish.id.in_(dish_ids)).all()
         # 2. Формируем словарь order_data для отправки на кухню
         order_dict = {
             'id': order.id,
@@ -258,11 +259,12 @@ async def confirm_order(callback: CallbackQuery):
             'status': order.status, # 'confirmed'
             "dishes": [
                 {
+                    "id": d.id,
                     "name": d.name,
                     "price": d.price,
                     "quantity": next(item.quantity for item in order.dishes if item.dish_id == d.id)
                 }
-                for d in order.order_dishes
+                for d in dishes
             ],
         }
 
