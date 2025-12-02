@@ -1,10 +1,12 @@
 from telegram_bot.bot_instance import dp, bot
 from app.database import SessionLocal
+# Необходимые модели должны быть импортированы из вашего файла app.models
 from app.models import Order, TelegramUser, Address
 from aiogram.types import CallbackQuery, Message
 from aiogram.types import InlineKeyboardButton as AioInlineKeyboardButton
 from aiogram.types import InlineKeyboardMarkup as AioInlineKeyboardMarkup
 
+# Коды для регистрации пользователей с разными ролями
 REGISTER_CODES = {
     "kitchen123": "kitchen",
     "courier456": "courier",
@@ -12,7 +14,7 @@ REGISTER_CODES = {
 }
 
 # =========================================================================
-# НОВАЯ ФУНКЦИЯ: ОТПРАВКА ЗАКАЗА АДМИНИСТРАТОРУ НА ПОДТВЕРЖДЕНИЕ
+# ФУНКЦИЯ: ОТПРАВКА ЗАКАЗА АДМИНИСТРАТОРУ НА ПОДТВЕРЖДЕНИЕ
 # =========================================================================
 async def send_order_to_admin(order_data: dict):
     """Отправляет новый заказ администраторам для первичного подтверждения."""
@@ -50,9 +52,11 @@ async def send_order_to_admin(order_data: dict):
         )
 
         # 4. Inline-кнопка для подтверждения
+        # ВНИМАНИЕ: Передача всей переменной 'message' в callback_data
+        # может вызвать ошибку "Callback data is too long" (лимит 64 байта).
         markup = AioInlineKeyboardMarkup(
             inline_keyboard=[
-                [AioInlineKeyboardButton(text="✅ Подтвердить и отправить на кухню", callback_data=f"admin_confirm:{order_data['id']}")]
+                [AioInlineKeyboardButton(text="✅ Подтвердить и отправить на кухню", callback_data=f"admin_confirm:{order_data['id'],message}")]
             ]
         )
 
@@ -81,7 +85,11 @@ async def send_order_to_admin(order_data: dict):
         db.close()
 
 
+# =========================================================================
+# ФУНКЦИЯ: ОТПРАВКА ЗАКАЗА НА КУХНЮ
+# =========================================================================
 async def send_order_to_kitchen(order_data: dict):
+    """Отправляет подтвержденный заказ на кухню."""
     db = SessionLocal()
     try:
         # 1. Получаем адрес
@@ -108,7 +116,6 @@ async def send_order_to_kitchen(order_data: dict):
                 continue
 
         # 3. Формируем сообщение
-        # Обратите внимание: статус теперь может быть 'confirmed' (если пришло через админа)
         message = (
                 f"🧾 <b>Новый заказ #{order_data['id']}</b>\n\n"
                 f"👤 <b>Пользователь ID:</b> <code>{order_data['user_id']}</code>\n"
@@ -121,7 +128,6 @@ async def send_order_to_kitchen(order_data: dict):
                 "\n".join(dish_lines) +
                 f"\n  =====================" +  # Нижний разделитель внутри блока
                 "\n```"
-
         )
 
         # 4. Inline-кнопка
@@ -155,7 +161,11 @@ async def send_order_to_kitchen(order_data: dict):
     finally:
         db.close()
 
+# =========================================================================
+# ФУНКЦИЯ: ОТПРАВКА ЗАКАЗА СО СТОЛА НА КУХНЮ (Без адреса)
+# =========================================================================
 async def send_table_order_to_kitchen(order_data: dict):
+    """Отправляет заказ со стола (без доставки) на кухню."""
     db = SessionLocal()
     try:
         dish_lines = []
@@ -169,9 +179,7 @@ async def send_table_order_to_kitchen(order_data: dict):
                 print(f"⚠️ Ошибка при разборе блюда: {dish} — {e}")
                 continue
 
-        # Символ для создания "рамки"
-        separator = "━━━━━━━"
-
+        # 3. Формируем сообщение
         message = (
                 f"🧾 <b>Новый заказ #{order_data['id']}</b>\n\n"
                 f"📍 <b> Cтол :</b> {order_data['table_id']}\n"
@@ -208,14 +216,20 @@ async def send_table_order_to_kitchen(order_data: dict):
         db.close()
 
 # =========================================================================
-# НОВЫЙ ОБРАБОТЧИК: ПОДТВЕРЖДЕНИЕ ЗАКАЗА АДМИНИСТРАТОРОМ
+# ОБРАБОТЧИК: ПОДТВЕРЖДЕНИЕ ЗАКАЗА АДМИНИСТРАТОРОМ
 # =========================================================================
 @dp.callback_query(lambda c: c.data.startswith("admin_confirm:"))
 async def confirm_order(callback: CallbackQuery):
     """Обрабатывает нажатие кнопки подтверждения заказа администратором.
     После подтверждения отправляет заказ на кухню."""
     chat_id = str(callback.from_user.id)
-    order_id = int(callback.data.split(":")[1])
+    # Извлекаем ID из callback_data, игнорируя остальную часть строки (f"...:{id,message}")
+    try:
+        order_id = int(callback.data.split(":")[1].split(',')[0])
+    except Exception:
+        # Fallback, если формат ID нарушен
+        await callback.answer("❌ Неверный формат ID заказа.", show_alert=True)
+        return
 
     db = SessionLocal()
     try:
@@ -230,18 +244,16 @@ async def confirm_order(callback: CallbackQuery):
             return
 
         # 1. Обновляем статус заказа в базе данных
-        order.status = "accepted"
+        order.status = "confirmed"
         db.commit()
 
         # 2. Формируем словарь order_data для отправки на кухню
-        # В реальном приложении нужно убедиться, что все поля доступны
         order_dict = {
             'id': order.id,
             'user_id': order.user_id,
             'address_id': order.address_id,
             'total_price': order.total_price,
             'status': order.status, # 'confirmed'
-            # Предполагаем, что order.dishes содержит нужный список для итерации
             'dishes': order.dishes
         }
 
@@ -264,9 +276,12 @@ async def confirm_order(callback: CallbackQuery):
         db.close()
 
 
-# Регистрация по коду
+# =========================================================================
+# ОБРАБОТЧИК: РЕГИСТРАЦИЯ ПО КОДУ
+# =========================================================================
 @dp.message()
 async def handle_registration(message: Message):
+    """Обрабатывает ввод кода для назначения роли."""
     code = message.text.strip()
     chat_id = str(message.chat.id)
 
@@ -288,9 +303,12 @@ async def handle_registration(message: Message):
     finally:
         db.close()
 
-# Кнопка "Готово" от кухни
+# =========================================================================
+# ОБРАБОТЧИК: КНОПКА "ГОТОВО" ОТ КУХНИ
+# =========================================================================
 @dp.callback_query(lambda c: c.data.startswith("ready:"))
 async def order_ready(callback: CallbackQuery):
+    """Обрабатывает нажатие кнопки "Готово" от пользователя с ролью кухни."""
     chat_id = str(callback.from_user.id)
     order_id = int(callback.data.split(":")[1])
 
@@ -309,7 +327,7 @@ async def order_ready(callback: CallbackQuery):
         order.status = "ready"
         db.commit()
 
-        # Удалить кнопку после нажатия
+        # Удалить кнопку "Готово" после нажатия
         try:
             await callback.message.edit_reply_markup(reply_markup=None)
         except Exception as e:
@@ -321,6 +339,7 @@ async def order_ready(callback: CallbackQuery):
         address = db.query(Address).filter(Address.id == order.address_id).first()
         address_text = address.full_address() if address else "Адрес не найден"
 
+        # Уведомляем курьеров
         couriers = db.query(TelegramUser).filter(TelegramUser.role == "courier").all()
         markup = AioInlineKeyboardMarkup(
             inline_keyboard=[
@@ -340,12 +359,15 @@ async def order_ready(callback: CallbackQuery):
             except Exception as e:
                 print(f"❌ Ошибка при отправке курьеру {courier.chat_id}: {e}")
 
-        await callback.answer("✅ Отправлено курьерам.")
     finally:
         db.close()
 
+# =========================================================================
+# ОБРАБОТЧИК: КНОПКА "ДОСТАВЛЕНО" ОТ КУРЬЕРА
+# =========================================================================
 @dp.callback_query(lambda c: c.data.startswith("delivered:"))
 async def order_done(callback: CallbackQuery):
+    """Обрабатывает нажатие кнопки "Доставлено" от пользователя с ролью курьера."""
     chat_id = str(callback.from_user.id)
     order_id = int(callback.data.split(":")[1])
 
@@ -364,6 +386,7 @@ async def order_done(callback: CallbackQuery):
         order.status = "done"
         db.commit()
 
+        # Редактируем сообщение курьера
         await callback.message.edit_text(f"✅ Заказ #{order.id} доставлен!")
         await callback.answer("Спасибо!")
     finally:
