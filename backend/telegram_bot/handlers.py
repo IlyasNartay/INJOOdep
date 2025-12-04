@@ -44,6 +44,7 @@ async def send_order_to_admin(order_data: dict):
                 f"👤 <b>Пользователь ID:</b> <code>{order_data['user_id']}</code>\n"
                 f"📍 <b>Адрес:</b> {address_text}\n"
                 f"💰 <b>Сумма:</b> {order_data['total_price']} ₸\n"
+                f"💰 <b>Kaspi:</b> {order_data['kaspi_number']} ₸\n"
                 f"📦 <b>Статус:</b> <i>Ожидает подтверждения</i>\n\n"
                 f"🍽 <b>Блюда:</b>\n"
                 f"```\n" +
