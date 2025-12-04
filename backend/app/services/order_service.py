@@ -52,6 +52,7 @@ async def create_order(db: Session, order_data: schemas.OrderCreate, user: model
         "id": order.id,
         "user_id": order.user_id,
         "address_id": order.address_id,
+        "kaspi_number": order.kaspi_number,
         "dishes": [
             {
                 "id": d.id,
