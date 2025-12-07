@@ -41,7 +41,113 @@ const categories = ref([
   { id: "pasta", name: "Паста", icon: "/pasta.svg" },
   { id: "fries", name: "Картофель фри", icon: "/fries.png" },
 ]);
-
+const menuEx = ref([
+  {
+    id: 1,
+    name: "Пицца Маргарита",
+    description: "Классическая пицца с соусом из томатов, моцареллой и свежим базиликом.",
+    price: 3500,
+    images: [{ image_url: "/Oreo-removebg-preview.png" }]
+  },
+  {
+    id: 2,
+    name: "Пицца Пепперони",
+    description: "Острая пицца с колбасками пепперони и расплавленным сыром.",
+    price: 3900,
+    images: [{ image_url: "/Oreo-removebg-preview.png" }]
+  },
+  {
+    id: 3,
+    name: "Пицца 4 Сыра",
+    description: "Соус сливочный, моцарелла, дорблю, пармезан и чеддер.",
+    price: 4100,
+    images: [{ image_url: "/Oreo-removebg-preview.png" }]
+  },
+  {
+    id: 4,
+    name: "Бургер Классик",
+    description: "Сочный говяжий бургер с сыром, салатом, помидорами и соусом.",
+    price: 2800,
+    images: [{ image_url: "/Oreo-removebg-preview.png" }]
+  },
+  {
+    id: 5,
+    name: "Бургер BBQ",
+    description: "Бургер с беконом, сыром чеддер и фирменным BBQ соусом.",
+    price: 3200,
+    images: [{ image_url: "/Oreo-removebg-preview.png" }]
+  },
+  {
+    id: 6,
+    name: "Суши-сет Классик",
+    description: "Набор роллов: Калифорния, Филадельфия и Маки с лососем.",
+    price: 4800,
+    images: [{ image_url: "/Oreo-removebg-preview.png" }]
+  },
+  {
+    id: 7,
+    name: "Суши-сет Лайт",
+    description: "Лёгкий набор роллов для одного: авокадо, огурец, тунец.",
+    price: 3100,
+    images: [{ image_url: "/Oreo-removebg-preview.png" }]
+  },
+  {
+    id: 8,
+    name: "Паста Карбонара",
+    description: "Паста со сливочным соусом, беконом и сыром пармезан.",
+    price: 3300,
+    images: [{ image_url: "/Oreo-removebg-preview.png" }]
+  },
+  {
+    id: 9,
+    name: "Паста Болоньезе",
+    description: "Традиционная итальянская паста с мясным соусом из говядины.",
+    price: 3400,
+    images: [{ image_url: "/Oreo-removebg-preview.png" }]
+  },
+  {
+    id: 10,
+    name: "Салат Цезарь",
+    description: "Салат с куриной грудкой, сухариками и соусом Цезарь.",
+    price: 2200,
+    images: [{ image_url: "/Oreo-removebg-preview.png" }]
+  },
+  {
+    id: 11,
+    name: "Салат Греческий",
+    description: "Свежие овощи, маслины, фета и оливковое масло.",
+    price: 2000,
+    images: [{ image_url: "/Oreo-removebg-preview.png" }]
+  },
+  {
+    id: 12,
+    name: "Стейк Рибай",
+    description: "Сочный стейк из мраморной говядины средней прожарки.",
+    price: 7200,
+    images: [{ image_url: "/Oreo-removebg-preview.png" }]
+  },
+  {
+    id: 13,
+    name: "Шашлык из курицы",
+    description: "Нежные кусочки курицы, жаренные на углях, подаются с соусом.",
+    price: 2700,
+    images: [{ image_url: "/Oreo-removebg-preview.png" }]
+  },
+  {
+    id: 14,
+    name: "Десерт Тирамису",
+    description: "Итальянский десерт с кофе, маскарпоне и какао.",
+    price: 1900,
+    images: [{ image_url: "/Oreo-removebg-preview.png" }]
+  },
+  {
+    id: 15,
+    name: "Молочный коктейль Ванильный",
+    description: "Нежный ванильный коктейль на основе мороженого и молока.",
+    price: 1500,
+    images: [{ image_url: "/Oreo-removebg-preview.png" }]
+  }
+]);
 const toggleCart = (restaurant) => {
   cart.toggleItem(restaurant);
 };
@@ -197,9 +303,9 @@ onMounted(() => {
 
 <template>
   <div class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
-    <Loader v-if="isLoading" />
+    <!-- <Loader v-if="isLoading" /> -->
     <div class="mb-6 sm:mb-8">
-      <div class="flex gap-6 sm:gap-8 overflow-y-scroll">
+      <div class="flex gap-6 sm:gap-8 overflow-y-hiden overflow-x-scroll ">
         <div
           v-for="category in categories"
           :key="category.id"
@@ -246,15 +352,15 @@ onMounted(() => {
             </button>
           </div>
         </div>
-        <Loader v-if="isLoading" />
+        <!-- <Loader v-if="isLoading" /> -->
         <div
           ref="scrollContainer"
           class="flex flex-wrap gap-3 sm:gap-4 lg:gap-6 overflow-x-auto scroll-smooth pb-2"
         >
           <div
-            v-for="restaurant in menu"
+            v-for="restaurant in menuEx"
             :key="restaurant.id"
-            class="w-[280px] max-[650px]:w-[210px] max-[450px]:w-[170px] max-[400px]:w-[160px] max-[450px]:h-[260px] bg-gray-800/50 border border-gray-700 mx-auto rounded-lg overflow-hidden hover:bg-gray-800/70 transition-colors cursor-pointer flex-shrink-0 pt-2"
+            class="w-[280px] max-[650px]:w-[210px] max-[450px]:w-[170px] max-[400px]:w-[160px] max-[350px]:w-[140px] max-[450px]:h-[260px] bg-gray-800/50 border border-gray-700 mx-auto rounded-lg overflow-hidden hover:bg-gray-800/70 transition-colors cursor-pointer flex-shrink-0 pt-2"
             @click="selectRestaurant(restaurant.id)"
           >
             <div class="relative">
@@ -290,11 +396,16 @@ onMounted(() => {
                 </div>
               </div>
               <img
+              :src="restaurant.images[0].image_url"
+                              class="h-[180px] max-[450px]:h-[145px] sm:h-[220px] lg:h-[300px] w-full object-cover"
+
+              >
+              <!-- <img
                 v-if="restaurant.images && restaurant.images.length"
                 :src="image_url + restaurant.images[0].image_url"
                 :alt="restaurant.name"
                 class="h-[180px] max-[450px]:h-[145px] sm:h-[220px] lg:h-[300px] w-full object-cover"
-              />
+              /> -->
               <!-- <p>image_url + restaurant.images[0].image_url</p> -->
             </div>
             <div class="p-3 sm:p-4">

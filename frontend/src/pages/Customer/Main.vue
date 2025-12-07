@@ -2,7 +2,6 @@
   <div
     class="min-h-screen w-full bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800 relative animated-gradient"
   >
-
     <header
       class="bg-gray-900/90 backdrop-blur-sm border-b border-gray-800 sticky top-0 z-40"
     >
@@ -21,8 +20,9 @@
               <span
                 class="text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none"
               >
-{{ shortAddress(address[0]?.address.full || address[0]?.address) }}
-
+                {{
+                  shortAddress(address[0]?.address.full || address[0]?.address)
+                }}
               </span>
               <ChevronDownIcon class="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
             </div>
@@ -46,7 +46,7 @@
               </div>
 
               <div class="flex-1">
-                <Map v-model:address="selectedAddress"/>
+                <Map v-model:address="selectedAddress" />
               </div>
             </div>
           </div>
@@ -91,7 +91,7 @@
     <!-- Address Modal -->
 
     <!-- Main Content -->
-    <MenuInterface/>
+    <MenuInterface />
   </div>
 </template>
 
@@ -106,14 +106,13 @@ import {
   MapPin as MapPinIcon,
   ChevronDown as ChevronDownIcon,
   X as CrossIcon,
-
 } from "lucide-vue-next";
-import { useAddressStore } from '@/stores/addressStore';
+import { useAddressStore } from "@/stores/addressStore";
 
 // Reactive data
 const searchQuery = ref("");
 const showMobileSearch = ref(false);
-const address = ref([{ address: '' }])
+const address = ref([{ address: "" }]);
 const selectedAddress = ref("");
 
 const store = useAddressStore();
@@ -132,15 +131,17 @@ const shortAddress = (fullAddress) => {
 };
 const getAdress = async () => {
   try {
-    const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}addresses/`, {
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-      },
-    });
+    const response = await axios.get(
+      `${import.meta.env.VITE_API_BASE_URL}addresses/`,
+      {
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+      }
+    );
     address.value = response.data || "Введите адрес";
-        store.setAddress(address.value);
-
+    store.setAddress(address.value);
   } catch (error) {
     console.error("Ошибка при получении меню:", error);
   }
@@ -151,7 +152,7 @@ onMounted(() => {
 });
 </script>
 
-<style >
+<style>
 /* Custom scrollbar for webkit browsers */
 ::-webkit-scrollbar {
   width: 6px;
@@ -214,6 +215,4 @@ onMounted(() => {
   background-size: 500% 500%;
   animation: gradientMove 15s ease-in-out infinite;
 }
-
-
 </style>

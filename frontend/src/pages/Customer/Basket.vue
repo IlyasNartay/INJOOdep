@@ -149,8 +149,8 @@
                   </span>
                 </label>
               </div>
-<p>{{ store.address?.[0]?.id }}asd</p>              <button
-                @click="makeCheckout"
+              <button
+                @click="makeOrderGuestorCustomer"
                 :disabled="!agreeToTerms || cartI.length === 0"
                 class="w-full bg-gray-900 text-white py-4 px-6 rounded-lg font-medium uppercase tracking-wide hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors mb-4"
               >
@@ -169,6 +169,42 @@
             </div>
           </div>
         </div>
+        <CustomModal v-if="showPhoneModal">
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+  >
+    <div class="relative p-4 bg-white rounded-lg w-[90vw] max-w-md">
+
+      <!-- Кнопка закрытия -->
+      <button
+        @click="showPhoneModal = false"
+        class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-200 transition"
+      >
+        ✕
+      </button>
+
+      <h2 class="text-lg font-semibold mb-4">Введите Kaspi номер</h2>
+
+      <!-- Поле ввода Kaspi -->
+      <label class="block text-sm font-medium mb-1">Номер телефона Kaspi</label>
+      <input
+        v-model="kaspiPhone"
+        type="text"
+        placeholder="87070000000"
+        class="w-full border rounded px-3 py-2 mb-4 outline-none focus:ring focus:ring-blue-300"
+      />
+
+      <button
+        @click="handleCheckout"
+        class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 w-full"
+      >
+        Сохранить
+      </button>
+
+    </div>
+  </div>
+</CustomModal>
+
       </div>
     </div>
   </div>
@@ -192,9 +228,19 @@ const orderNote = ref("");
 const agreeToTerms = ref(false);
 const store = useAddressStore();
 const role = localStorage.getItem('userRole')
-
+const showPhoneModal = ref(false)
 const address = ref([{ address: '' }])
-
+const kaspiPhone = ref("")
+const openPhoneModal = () => {
+  showPhoneModal.value = true;
+};
+const makeOrderGuestorCustomer = () =>{
+  if (localStorage.getItem('userRole') === 'guest'){
+    handleCheckoutForGuest()
+  }else{
+    openPhoneModal()
+  }
+}
 let table_id = ref(localStorage.getItem('selectedTable'))
 function remove(id) {
   cartI.removeItem(id);
@@ -229,7 +275,7 @@ const handleCheckoutForGuest = async () => {
 
   const checkoutData = {
     table_id: Number(localStorage.getItem('selectedTable')), // замените на реальный ID адреса
-    order_dishes: cartI.items.map((item) => ({
+    dishes: cartI.items.map((item) => ({
       dish_id: item.id,
       quantity: item.quantity || 1, // или другое поле, если у тебя есть quantity
     })),
@@ -263,8 +309,7 @@ const handleCheckoutForGuest = async () => {
     isLoading.value = false;
   }
 };
-// FIX: Added optional chaining and null/undefined check
-console.log(store.address?.[0]?.id)
+
 const handleCheckout = async () => {
   // Check if address data is available before proceeding for non-guest roles
   if (!store.address || store.address.length === 0 || !store.address[0].id) {
@@ -274,8 +319,8 @@ const handleCheckout = async () => {
   }
 
   const checkoutData = {
-    // FIX: Using optional chaining to safely access id
-    address_id: store.address[0]?.id,
+    address_id: store.address[0].id, // замените на реальный ID адреса
+    kaspi_number: kaspiPhone.value,
     dishes: cartI.items.map((item) => ({
       dish_id: item.id,
       quantity: item.quantity || 1, // или другое поле, если у тебя есть quantity
@@ -294,10 +339,9 @@ const handleCheckout = async () => {
         },
       }
     );
+    showPhoneModal.value = false
 
-    console.log("✅ Заказ успешно оформлен:", response.data);
     success.value = true;
-
     // можно очистить корзину:
     cartI.clearCart();
   } catch (error) {

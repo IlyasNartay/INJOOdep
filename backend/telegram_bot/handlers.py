@@ -44,7 +44,7 @@ async def send_order_to_admin(order_data: dict):
                 f"👤 <b>Пользователь ID:</b> <code>{order_data['user_id']}</code>\n"
                 f"📍 <b>Адрес:</b> {address_text}\n"
                 f"💰 <b>Сумма:</b> {order_data['total_price']} ₸\n"
-                f"💰 <b>Kaspi:</b> {order_data['kaspi_number']} ₸\n"
+                f"📞 <b>Kaspi:</b> {order_data['kaspi_number']}\n"
                 f"📦 <b>Статус:</b> <i>Ожидает подтверждения</i>\n\n"
                 f"🍽 <b>Блюда:</b>\n"
                 f"```\n" +
@@ -193,7 +193,7 @@ async def send_table_order_to_kitchen(order_data: dict):
 
         # 3. Формируем сообщение
         message = (
-                f"🧾 <b>Новый заказ #{order_data['id']}</b>\n\n"
+                f"🧾 <b>Новый заказ  в зал #{order_data['id']}</b>\n\n"
                 f"📍 <b> Cтол :</b> {order_data['table_id']}\n"
                 f"💰 <b>Сумма:</b> {order_data['total_price']} ₸\n"
                 f"🍽 <b>Блюда:</b>\n"

@@ -137,7 +137,7 @@
           </div>
 
           <!-- Order Actions -->
-          <div
+          <!-- <div
             class="bg-gradient-to-r from-gray-50/50 to-blue-50/30 p-6 border-t border-gray-200/30"
           >
             <div class="flex flex-col sm:flex-row gap-3">
@@ -163,7 +163,7 @@
                 <span>Поддержка</span>
               </button>
             </div>
-          </div>
+          </div> -->
         </div>
       </div>
           <Loader v-if="isLoading" />
