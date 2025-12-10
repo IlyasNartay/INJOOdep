@@ -1,11 +1,13 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800 py-8 animated-gradient">
+  <div
+    class="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800 py-8 animated-gradient"
+  >
     <div class="max-w-6xl mx-auto px-4">
       <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-0">
           <div class="lg:col-span-2 p-8 max-[335px]:p-2">
             <div
-              class="flex justify-between w-[80%] gap-4 pb-4 mb-6 border-b border-gray-200 text-sm max-[480px]:text-[10px] font-medium text-gray-500 uppercase tracking-wide"
+              class="flex justify-between w-[80%] max-[480px]:w-[100%] gap-4 pb-4 mb-6 border-b border-gray-200 text-sm max-[480px]:text-[10px] font-medium text-gray-500 uppercase tracking-wide"
             >
               <div class="col-span-5">Продукт</div>
               <div class="col-span-2 text-center">Цена</div>
@@ -19,40 +21,48 @@
               <div
                 v-for="item in cartI.itemsWithTotal"
                 :key="item.id"
-                class="flex  gap-4 justify-between items-center py-4 w-[90%]"
+                class="flex gap-4 justify-between items-center py-4 w-[90%]"
               >
                 <div class="col-span-5 flex items-center space-x-4">
                   <div
                     class="max-[480px]:w-[40px] max-[480px]:h-[40px] w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0"
                   >
                     <img
-                    v-if="item && item.image_url"
+                      v-if="item && item.image_url"
                       :src="image_url + item.images[0].image_url || 'o'"
                       :alt="item.name"
                       class="w-full h-full object-cover max-[480px]:w-[40px] max-[480px]:h-[40px]"
                     />
                   </div>
                   <div class="flex-1 min-w-0">
-                    <h3 class="font-medium text-gray-900 mb-1 max-[480px]:text-[10px]">
+                    <h3
+                      class="font-medium text-gray-900 mb-1 max-[480px]:text-[10px]"
+                    >
                       {{ item.name }}
                     </h3>
-                    <p class="text-sm text-gray-500 max-[480px]:text-[10px]">{{ item.description }}</p>
+                    <p class="text-sm text-gray-500 max-[480px]:text-[10px]">
+                      {{ item.description }}
+                    </p>
                   </div>
                 </div>
 
                 <div class="col-span-3 text-right">
-                  <span class="font-medium text-gray-900 max-[480px]:text-[10px]">
+                  <span
+                    class="font-medium text-gray-900 max-[480px]:text-[10px]"
+                  >
                     {{ item.total }} ₸
                   </span>
                 </div>
 
-                <div class="col-span-2 flex max-[380px]:flex-col  items-center justify-center gap-4">
+                <div
+                  class="col-span-2 flex max-[380px]:flex-col items-center justify-center gap-4"
+                >
                   <div
                     class="flex max-[380px]:flex-col items-center border border-gray-300 rounded-lg max-[480px]:w-[80px] max-[350px]:w-[50px] max-[480px]:text-[10px]"
                   >
                     <button
                       @click="decreaseQuantity(item.id)"
-                      class="w-8 h-8 flex items-center  justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-colors"
+                      class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-colors"
                       :disabled="item.quantity <= 1"
                     >
                       <MinusIcon class="w-4 h-4" />
@@ -68,11 +78,10 @@
                     </button>
                   </div>
                   <MinusIcon
-                  @click="remove(item.id)"
-                  class="w-8 h-8 text-red-500 max-[480px]:w-4 max-[480px]:h-4"
-                />
+                    @click="remove(item.id)"
+                    class="w-8 h-8 text-red-500 max-[480px]:w-4 max-[480px]:h-4"
+                  />
                 </div>
-
               </div>
 
               <div class="text-right font-bold text-lg mt-8">
@@ -112,6 +121,29 @@
               </p>
               <button
                 @click="success = false"
+                class="bg-white/80 text-blue-700 px-6 py-2 rounded-lg hover:bg-white transition font-semibold"
+              >
+                Закрыть
+              </button>
+            </div>
+          </CustomModal>
+          <CustomModal v-if="failInRest">
+            <div
+              class="relative z-10 backdrop-blur-md bg-white/20 border border-white/30 p-6 rounded-2xl shadow-xl w-[90%] max-w-md text-center"
+            >
+              <img
+                src="/fail-modal.svg"
+                alt="Успешно"
+                class="w-16 h-16 mx-auto mb-4"
+              />
+              <h3 class="text-xl font-semibold text-black mb-2">
+                Что то пошло не так!
+              </h3>
+              <p class="text-black mb-4">
+                {{ getTableTitle(userRole) }}
+              </p>
+              <button
+                @click="failInRest = false"
                 class="bg-white/80 text-blue-700 px-6 py-2 rounded-lg hover:bg-white transition font-semibold"
               >
                 Закрыть
@@ -170,41 +202,40 @@
           </div>
         </div>
         <CustomModal v-if="showPhoneModal">
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-  >
-    <div class="relative p-4 bg-white rounded-lg w-[90vw] max-w-md">
+          <div
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          >
+            <div class="relative p-4 bg-white rounded-lg w-[90vw] max-w-md">
+              <!-- Кнопка закрытия -->
+              <button
+                @click="showPhoneModal = false"
+                class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-200 transition"
+              >
+                ✕
+              </button>
 
-      <!-- Кнопка закрытия -->
-      <button
-        @click="showPhoneModal = false"
-        class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-200 transition"
-      >
-        ✕
-      </button>
+              <h2 class="text-lg font-semibold mb-4">Введите Kaspi номер</h2>
 
-      <h2 class="text-lg font-semibold mb-4">Введите Kaspi номер</h2>
+              <!-- Поле ввода Kaspi -->
+              <label class="block text-sm font-medium mb-1"
+                >Номер телефона Kaspi</label
+              >
+              <input
+                v-model="kaspiPhone"
+                type="text"
+                placeholder="87070000000"
+                class="w-full border rounded px-3 py-2 mb-4 outline-none focus:ring focus:ring-blue-300"
+              />
 
-      <!-- Поле ввода Kaspi -->
-      <label class="block text-sm font-medium mb-1">Номер телефона Kaspi</label>
-      <input
-        v-model="kaspiPhone"
-        type="text"
-        placeholder="87070000000"
-        class="w-full border rounded px-3 py-2 mb-4 outline-none focus:ring focus:ring-blue-300"
-      />
-
-      <button
-        @click="handleCheckout"
-        class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 w-full"
-      >
-        Сохранить
-      </button>
-
-    </div>
-  </div>
-</CustomModal>
-
+              <button
+                @click="handleCheckout"
+                class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 w-full"
+              >
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </CustomModal>
       </div>
     </div>
   </div>
@@ -217,31 +248,39 @@ import { useCartStore } from "/src/stores/Basket.js";
 import CustomModal from "@/components/CustomModal.vue";
 import axios from "axios";
 import Loader from "@/components/Loader.vue";
-import { useAddressStore } from '@/stores/addressStore';
+import { useAddressStore } from "@/stores/addressStore";
 
 const cartI = useCartStore();
 const isLoading = ref(false);
 const image_url = `${import.meta.env.VITE_API_BASE_URL}`;
 const success = ref(false);
-// Reactive data
+const failInRest = ref(false);
+const userRole = localStorage.getItem("userRole");
+
 const orderNote = ref("");
 const agreeToTerms = ref(false);
 const store = useAddressStore();
-const role = localStorage.getItem('userRole')
-const showPhoneModal = ref(false)
-const address = ref([{ address: '' }])
-const kaspiPhone = ref("")
+const role = localStorage.getItem("userRole");
+const showPhoneModal = ref(false);
+const address = ref([{ address: "" }]);
+const kaspiPhone = ref("");
+
+const getTableTitle = (userRole) => {
+  if (role === "guest") return "Выберите свой стол!";
+  if (role === "customer") return "По пробуйте сделать заказ чуть позже!";
+};
+
 const openPhoneModal = () => {
   showPhoneModal.value = true;
 };
-const makeOrderGuestorCustomer = () =>{
-  if (localStorage.getItem('userRole') === 'guest'){
-    handleCheckoutForGuest()
-  }else{
-    openPhoneModal()
+const makeOrderGuestorCustomer = () => {
+  if (localStorage.getItem("userRole") === "guest") {
+    handleCheckoutForGuest();
+  } else {
+    openPhoneModal();
   }
-}
-let table_id = ref(localStorage.getItem('selectedTable'))
+};
+let table_id = ref(localStorage.getItem("selectedTable"));
 function remove(id) {
   cartI.removeItem(id);
 }
@@ -271,20 +310,22 @@ const decreaseQuantity = (itemId) => {
   }
 };
 const handleCheckoutForGuest = async () => {
-    isLoading.value = true;
+  isLoading.value = true;
 
   const checkoutData = {
-    table_id: Number(localStorage.getItem('selectedTable')), // замените на реальный ID адреса
+    table_id: Number(localStorage.getItem("selectedTable")), // замените на реальный ID адреса
     dishes: cartI.items.map((item) => ({
       dish_id: item.id,
       quantity: item.quantity || 1, // или другое поле, если у тебя есть quantity
     })),
   };
-  if (!table_id.value) { // Added .value to table_id
+  if (!table_id.value) {
+    // Added .value to table_id
+    failInRest.value = true;
+
     console.error("❌ Не найден table_id!");
-    // You didn't define 'fail', so I'm commenting it out or assuming you have it defined elsewhere
-    // fail.value = true;
     isLoading.value = false; // Ensure loading state is reset
+    failInRest.value = true;
     return;
   }
 
@@ -304,13 +345,20 @@ const handleCheckoutForGuest = async () => {
       "❌ Ошибка при оформлении заказа:",
       error.response?.data || error.message
     );
-    // fail.value = true;
+    failInRest.value = true;
   } finally {
     isLoading.value = false;
   }
 };
 
 const handleCheckout = async () => {
+  // Check if address data is available before proceeding for non-guest roles
+  if (!store.address || store.address.length === 0 || !store.address[0].id) {
+    console.error("❌ Не найден address_id для оформления заказа!");
+    // You should probably show an error to the user here
+    return;
+  }
+
   // Check if address data is available before proceeding for non-guest roles
   if (!store.address || store.address.length === 0 || !store.address[0].id) {
     console.error("❌ Не найден address_id для оформления заказа!");
@@ -339,7 +387,7 @@ const handleCheckout = async () => {
         },
       }
     );
-    showPhoneModal.value = false
+    showPhoneModal.value = false;
 
     success.value = true;
     // можно очистить корзину:
@@ -354,17 +402,16 @@ const handleCheckout = async () => {
     isLoading.value = false;
   }
 };
-const makeCheckout = () =>{
-if (role == 'guest'){
-  handleCheckoutForGuest()
-} else{
-  handleCheckout()
-}
-}
+const makeCheckout = () => {
+  if (role == "guest") {
+    handleCheckoutForGuest();
+  } else {
+    handleCheckout();
+  }
+};
 watch(address, (newVal) => {
   store.address = [{ address: newVal[0].address }];
 });
-
 </script>
 
 <style scoped>

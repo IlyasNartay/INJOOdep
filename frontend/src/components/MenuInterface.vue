@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, computed, watch } from "vue";
+import { onMounted, ref, computed, watch, nextTick } from "vue";
 import axios from "axios";
 import {
   ChevronLeft as ChevronLeftIcon,
@@ -8,6 +8,7 @@ import {
   ShoppingCart as ShoppingCartIcon,
   Minus as MinusIcon,
   Pen as PenIcon,
+  PlusIcon as PlusIcon,
 } from "lucide-vue-next";
 import Loader from "./Loader.vue";
 import { useCartStore } from "/src/stores/Basket.js";
@@ -41,115 +42,57 @@ const categories = ref([
   { id: "pasta", name: "Паста", icon: "/pasta.svg" },
   { id: "fries", name: "Картофель фри", icon: "/fries.png" },
 ]);
-const menuEx = ref([
-  {
-    id: 1,
-    name: "Пицца Маргарита",
-    description: "Классическая пицца с соусом из томатов, моцареллой и свежим базиликом.",
-    price: 3500,
-    images: [{ image_url: "/Oreo-removebg-preview.png" }]
-  },
-  {
-    id: 2,
-    name: "Пицца Пепперони",
-    description: "Острая пицца с колбасками пепперони и расплавленным сыром.",
-    price: 3900,
-    images: [{ image_url: "/Oreo-removebg-preview.png" }]
-  },
-  {
-    id: 3,
-    name: "Пицца 4 Сыра",
-    description: "Соус сливочный, моцарелла, дорблю, пармезан и чеддер.",
-    price: 4100,
-    images: [{ image_url: "/Oreo-removebg-preview.png" }]
-  },
-  {
-    id: 4,
-    name: "Бургер Классик",
-    description: "Сочный говяжий бургер с сыром, салатом, помидорами и соусом.",
-    price: 2800,
-    images: [{ image_url: "/Oreo-removebg-preview.png" }]
-  },
-  {
-    id: 5,
-    name: "Бургер BBQ",
-    description: "Бургер с беконом, сыром чеддер и фирменным BBQ соусом.",
-    price: 3200,
-    images: [{ image_url: "/Oreo-removebg-preview.png" }]
-  },
-  {
-    id: 6,
-    name: "Суши-сет Классик",
-    description: "Набор роллов: Калифорния, Филадельфия и Маки с лососем.",
-    price: 4800,
-    images: [{ image_url: "/Oreo-removebg-preview.png" }]
-  },
-  {
-    id: 7,
-    name: "Суши-сет Лайт",
-    description: "Лёгкий набор роллов для одного: авокадо, огурец, тунец.",
-    price: 3100,
-    images: [{ image_url: "/Oreo-removebg-preview.png" }]
-  },
-  {
-    id: 8,
-    name: "Паста Карбонара",
-    description: "Паста со сливочным соусом, беконом и сыром пармезан.",
-    price: 3300,
-    images: [{ image_url: "/Oreo-removebg-preview.png" }]
-  },
-  {
-    id: 9,
-    name: "Паста Болоньезе",
-    description: "Традиционная итальянская паста с мясным соусом из говядины.",
-    price: 3400,
-    images: [{ image_url: "/Oreo-removebg-preview.png" }]
-  },
-  {
-    id: 10,
-    name: "Салат Цезарь",
-    description: "Салат с куриной грудкой, сухариками и соусом Цезарь.",
-    price: 2200,
-    images: [{ image_url: "/Oreo-removebg-preview.png" }]
-  },
-  {
-    id: 11,
-    name: "Салат Греческий",
-    description: "Свежие овощи, маслины, фета и оливковое масло.",
-    price: 2000,
-    images: [{ image_url: "/Oreo-removebg-preview.png" }]
-  },
-  {
-    id: 12,
-    name: "Стейк Рибай",
-    description: "Сочный стейк из мраморной говядины средней прожарки.",
-    price: 7200,
-    images: [{ image_url: "/Oreo-removebg-preview.png" }]
-  },
-  {
-    id: 13,
-    name: "Шашлык из курицы",
-    description: "Нежные кусочки курицы, жаренные на углях, подаются с соусом.",
-    price: 2700,
-    images: [{ image_url: "/Oreo-removebg-preview.png" }]
-  },
-  {
-    id: 14,
-    name: "Десерт Тирамису",
-    description: "Итальянский десерт с кофе, маскарпоне и какао.",
-    price: 1900,
-    images: [{ image_url: "/Oreo-removebg-preview.png" }]
-  },
-  {
-    id: 15,
-    name: "Молочный коктейль Ванильный",
-    description: "Нежный ванильный коктейль на основе мороженого и молока.",
-    price: 1500,
-    images: [{ image_url: "/Oreo-removebg-preview.png" }]
+const cartIcon = ref(null);
+
+function animateToCart(event) {
+  const cart = cartIcon.value;
+  if (!cart) {
+    console.warn("cartIcon is null — корзина ещё не доступна");
+    return;
   }
-]);
-const toggleCart = (restaurant) => {
-  cart.toggleItem(restaurant);
+
+  // Координаты места клика
+  const startX = event.clientX;
+  const startY = event.clientY;
+
+  // Координаты корзины
+  const cartRect = cart.getBoundingClientRect();
+  const endX = cartRect.left + cartRect.width / 2;
+  const endY = cartRect.top + cartRect.height / 2;
+
+  // Создаём летающий элемент (можно заменить на картинку блюда)
+  const fly = document.createElement("div");
+  fly.style.position = "fixed";
+  fly.style.left = startX + "px";
+  fly.style.top = startY + "px";
+  fly.style.width = "30px";
+  fly.style.height = "30px";
+  fly.style.borderRadius = "50%";
+  fly.style.background = "#4ade80"; // зелёный кружок
+  fly.style.zIndex = "9999";
+  fly.style.transition = "all 0.7s cubic-bezier(0.4, 0, 0.2, 1)";
+
+  document.body.appendChild(fly);
+
+  // Запуск анимации
+  setTimeout(() => {
+    fly.style.left = endX + "px";
+    fly.style.top = endY + "px";
+    fly.style.transform = "scale(0.3)";
+    fly.style.opacity = "0";
+  }, 10);
+
+  // Удаляем после завершения анимации
+  setTimeout(() => {
+    fly.remove();
+  }, 800);
+}
+const totalCount = computed(() =>
+  cart.items.reduce((sum, item) => sum + item.quantity, 0)
+);
+const handleAddToCart = (event, restaurant) => {
+  animateToCart(event); // запускаем полёт
+  cart.toggleItem(restaurant); // добавляем в корзину
 };
 const isInCart = (id) => {
   return cart.isInCart(id);
@@ -305,7 +248,7 @@ onMounted(() => {
   <div class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
     <!-- <Loader v-if="isLoading" /> -->
     <div class="mb-6 sm:mb-8">
-      <div class="flex gap-6 sm:gap-8 overflow-y-hiden overflow-x-scroll ">
+      <div class="flex gap-6 sm:gap-8 overflow-y-hiden overflow-x-scroll">
         <div
           v-for="category in categories"
           :key="category.id"
@@ -358,13 +301,13 @@ onMounted(() => {
           class="flex flex-wrap gap-3 sm:gap-4 lg:gap-6 overflow-x-auto scroll-smooth pb-2"
         >
           <div
-            v-for="restaurant in menuEx"
+            v-for="restaurant in menu"
             :key="restaurant.id"
             class="w-[280px] max-[650px]:w-[210px] max-[450px]:w-[170px] max-[400px]:w-[160px] max-[350px]:w-[140px] max-[450px]:h-[260px] bg-gray-800/50 border border-gray-700 mx-auto rounded-lg overflow-hidden hover:bg-gray-800/70 transition-colors cursor-pointer flex-shrink-0 pt-2"
             @click="selectRestaurant(restaurant.id)"
           >
             <div class="relative">
-              <div
+              <!-- <div
                 class="absolute right-2 top-2 z-10"
                 v-if="role === 'customer' || role === 'guest'"
               >
@@ -375,7 +318,7 @@ onMounted(() => {
                     isInCart(restaurant.id) ? 'text-green-500' : 'text-white'
                   "
                 />
-              </div>
+              </div> -->
               <div
                 class="absolute right-14 max-[450px]:right-8 max-[450px]:top-[10px] top-3 z-10"
                 v-if="role == 'admin'"
@@ -395,17 +338,17 @@ onMounted(() => {
                   />
                 </div>
               </div>
-              <img
+              <!-- <img
               :src="restaurant.images[0].image_url"
                               class="h-[180px] max-[450px]:h-[145px] sm:h-[220px] lg:h-[300px] w-full object-cover"
 
-              >
-              <!-- <img
+              > -->
+              <img
                 v-if="restaurant.images && restaurant.images.length"
                 :src="image_url + restaurant.images[0].image_url"
                 :alt="restaurant.name"
                 class="h-[180px] max-[450px]:h-[145px] sm:h-[220px] lg:h-[300px] w-full object-cover"
-              /> -->
+              />
               <!-- <p>image_url + restaurant.images[0].image_url</p> -->
             </div>
             <div class="p-3 sm:p-4">
@@ -417,7 +360,26 @@ onMounted(() => {
               >
                 {{ restaurant.description }}
               </p>
-              <div class="flex items-center justify-end text-xs sm:text-sm">
+              <div
+                class="flex items-center justify-end gap-4 text-xs sm:text-sm"
+              >
+                <div
+                  v-show="role === 'customer' || role === 'guest'"
+                  class="inline-block"
+                >
+                  <div
+                    @click.stop="handleAddToCart($event, restaurant)"
+                    class="w-5 h-5 sm:w-6 sm:h-6 cursor-pointer text-white"
+                  >
+                    <PlusIcon
+                      v-if="!isInCart(restaurant.id)"
+                      class="w-full h-full text-white"
+                    />
+
+                    <MinusIcon v-else class="w-full h-full text-red-400" />
+                  </div>
+                </div>
+
                 <div class="flex items-center space-x-2 sm:space-x-4">
                   <span class="text-gray-300 text-sm sm:text-[18px]"
                     >{{ restaurant.price }}₸</span
@@ -512,5 +474,24 @@ onMounted(() => {
         </div>
       </div>
     </CustomModal>
+    <div
+  class="fixed bottom-4 right-4 w-12 h-12 z-50"
+  ref="cartIcon"
+  v-show="role === 'customer' || role === 'guest'"
+>
+  <div class="relative w-full h-full">
+    <ShoppingCartIcon class="w-12 h-12 text-white" />
+
+    <!-- Бейдж -->
+    <span
+      v-if="totalCount > 0"
+      class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-6 h-6
+             flex items-center justify-center rounded-full font-bold shadow"
+    >
+      {{ totalCount }}
+    </span>
+  </div>
+</div>
+
   </div>
 </template>
