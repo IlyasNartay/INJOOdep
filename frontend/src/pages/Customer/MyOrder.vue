@@ -37,9 +37,6 @@
                   <h3 class="text-xl font-semibold text-gray-800">
                     Заказ #{{ order.id }}
                   </h3>
-                  <p class="text-gray-600 text-sm">
-                    {{ formatDate(new Date()) }}
-                  </p>
                 </div>
               </div>
 
@@ -257,24 +254,13 @@ const getStatusClass = (status) => {
 const getStatusText = (status) => {
   const statusTexts = {
     pending: "Ожидает подтверждения",
-    confirmed: "Подтвержден",
-    preparing: "Готовится",
-    delivering: "В пути",
-    delivered: "Доставлен",
-    cancelled: "Отменен",
+    accepted: "Подтвержден",
+    ready: "В пути",
+    done: "Доставлен",
   };
   return statusTexts[status] || "Неизвестно";
 };
 
-const formatDate = (date) => {
-  return new Intl.DateTimeFormat("ru-RU", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-};
 </script>
 
 <style scoped>

@@ -12,6 +12,9 @@ import {
 } from "lucide-vue-next";
 import Loader from "./Loader.vue";
 import { useCartStore } from "/src/stores/Basket.js";
+import { RouterLink, useRouter } from "vue-router";
+import CustomModal from "./CustomModal.vue";
+import { useAutoClose } from '@/stores/useAutoClose'
 
 const filterName = ref(null);
 const isLoading = ref(false);
@@ -22,7 +25,7 @@ const cart = useCartStore();
 const role = localStorage.getItem("userRole");
 const editingDish = ref(null); // объект редактируемого блюда
 const showEditModal = ref(false);
-
+const router = useRouter()
 const categories = ref([
   { id: "all", name: "Все блюда", icon: "/all-food.svg" },
   { id: "vegetarian", name: "Вегетерианские", icon: "/vegetables.svg" },
@@ -43,6 +46,10 @@ const categories = ref([
   { id: "fries", name: "Картофель фри", icon: "/fries.png" },
 ]);
 const cartIcon = ref(null);
+
+const successEdit = ref(false)
+const successDelete = ref(false)
+const fail = ref(false)
 
 function animateToCart(event) {
   const cart = cartIcon.value;
@@ -170,10 +177,11 @@ const deleteDish = async (id) => {
       // ⬇️ Удаляем из локального списка меню
       menu.value = menu.value.filter((item) => item.id !== id);
     }
-
+successDelete.value = true
     return response.data;
   } catch (error) {
     console.error("Ошибка при удалении:", error);
+    fail.value =true
   } finally {
     isLoading.value = false;
   }
@@ -222,15 +230,21 @@ const saveEdit = async () => {
     if (index !== -1) {
       menu.value[index] = { ...editingDish.value };
     }
+    successEdit.value = true
   } catch (error) {
     console.error(
       "❌ Ошибка при обновлении:",
       error.response?.data || error.message
     );
+    fail.value = true
   } finally {
     isLoading.value = false;
   }
 };
+useAutoClose(successEdit, 2000)
+useAutoClose(fail, 2500)
+useAutoClose(successDelete, 3000)
+
 watch(filterName, (newVal) => {
   if (newVal === "all") {
     getMenu();
@@ -246,7 +260,7 @@ onMounted(() => {
 
 <template>
   <div class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
-    <!-- <Loader v-if="isLoading" /> -->
+    <Loader v-if="isLoading" />
     <div class="mb-6 sm:mb-8">
       <div class="flex gap-6 sm:gap-8 overflow-y-hiden overflow-x-scroll">
         <div
@@ -295,7 +309,7 @@ onMounted(() => {
             </button>
           </div>
         </div>
-        <!-- <Loader v-if="isLoading" /> -->
+        <Loader v-if="isLoading" />
         <div
           ref="scrollContainer"
           class="flex flex-wrap gap-3 sm:gap-4 lg:gap-6 overflow-x-auto scroll-smooth pb-2"
@@ -303,7 +317,7 @@ onMounted(() => {
           <div
             v-for="restaurant in menu"
             :key="restaurant.id"
-            class="w-[280px] max-[650px]:w-[210px] max-[450px]:w-[170px] max-[400px]:w-[160px] max-[350px]:w-[140px] max-[450px]:h-[260px] bg-gray-800/50 border border-gray-700 mx-auto rounded-lg overflow-hidden hover:bg-gray-800/70 transition-colors cursor-pointer flex-shrink-0 pt-2"
+            class="w-[280px] max-[650px]:w-[210px] max-[450px]:w-[170px] max-[400px]:w-[160px] max-[350px]:w-[140px] max-[450px]:h-full bg-gray-800/50 border border-gray-700 mx-auto rounded-lg overflow-hidden hover:bg-gray-800/70 transition-colors cursor-pointer flex-shrink-0 pt-2"
             @click="selectRestaurant(restaurant.id)"
           >
             <div class="relative">
@@ -328,6 +342,46 @@ onMounted(() => {
                   class="w-5 h-5 sm:w-6 sm:h-6 max-[450px]:h-[12px] max-[450px]:w-[12px] cursor-pointer transition-colors text-white"
                 />
               </div>
+              <CustomModal v-if="successEdit">
+            <div
+              class="relative z-10 backdrop-blur-md bg-white/20 border border-white/30 p-6 rounded-2xl shadow-xl w-[90%] max-w-md text-center"
+            >
+              <img
+                src="/sucsess-modal.svg"
+                alt="Успешно"
+                class="w-16 h-16 mx-auto mb-4"
+              />
+              <h3 class="text-xl font-semibold text-black mb-2">
+                Вы успешно поменяли блюдо!
+              </h3>
+              <button
+                @click="success = false"
+                class="bg-white/80 text-blue-700 px-6 py-2 rounded-lg hover:bg-white transition font-semibold"
+              >
+                Закрыть
+              </button>
+            </div>
+          </CustomModal>
+          <CustomModal v-if="fail">
+            <div
+              class="relative z-10 backdrop-blur-md bg-white/20 border border-white/30 p-6 rounded-2xl shadow-xl w-[90%] max-w-md text-center"
+            >
+              <img
+                src="/sucsess-modal.svg"
+                alt="Успешно"
+                class="w-16 h-16 mx-auto mb-4"
+              />
+              <h3 class="text-xl font-semibold text-black mb-2">
+                Что-то пошло не так!
+              </h3>
+              <button
+                @click="success = false"
+                class="bg-white/80 text-blue-700 px-6 py-2 rounded-lg hover:bg-white transition font-semibold"
+              >
+                Закрыть
+              </button>
+            </div>
+          </CustomModal>
               <div class="absolute right-2 top-2 z-10" v-if="role == 'admin'">
                 <div
                   class="w-8 h-8 max-[450px]:h-4 max-[450px]:w-4 rounded-full bg-red-400 flex justify-center items-center"
@@ -338,6 +392,26 @@ onMounted(() => {
                   />
                 </div>
               </div>
+              <CustomModal v-if="successDelete">
+            <div
+              class="relative z-10 backdrop-blur-md bg-white/20 border border-white/30 p-6 rounded-2xl shadow-xl w-[90%] max-w-md text-center"
+            >
+              <img
+                src="/sucsess-modal.svg"
+                alt="Успешно"
+                class="w-16 h-16 mx-auto mb-4"
+              />
+              <h3 class="text-xl font-semibold text-black mb-2">
+                Вы успешно удалили блюдо!
+              </h3>
+              <button
+                @click="success = false"
+                class="bg-white/80 text-blue-700 px-6 py-2 rounded-lg hover:bg-white transition font-semibold"
+              >
+                Закрыть
+              </button>
+            </div>
+          </CustomModal>
               <!-- <img
               :src="restaurant.images[0].image_url"
                               class="h-[180px] max-[450px]:h-[145px] sm:h-[220px] lg:h-[300px] w-full object-cover"
@@ -351,7 +425,7 @@ onMounted(() => {
               />
               <!-- <p>image_url + restaurant.images[0].image_url</p> -->
             </div>
-            <div class="p-3 sm:p-4">
+            <div class="p-3 sm:p-4 ">
               <h3 class="font-semibold text-white mb-1 text-sm sm:text-base">
                 {{ restaurant.name }}
               </h3>
@@ -479,7 +553,7 @@ onMounted(() => {
   ref="cartIcon"
   v-show="role === 'customer' || role === 'guest'"
 >
-  <div class="relative w-full h-full">
+<div class="relative w-full h-full" @click="router.push('/Basket')">
     <ShoppingCartIcon class="w-12 h-12 text-white" />
 
     <!-- Бейдж -->

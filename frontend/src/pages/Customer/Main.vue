@@ -30,6 +30,8 @@
 
           <div
             v-if="isModalOpen"
+            @click.self="closeModal"
+
             class="fixed inset-0 z-50 flex items-center justify-center h-[800px] bg-black/50 backdrop-blur-sm p-4"
           >
             <div
@@ -109,6 +111,7 @@ import {
   X as CrossIcon,
 } from "lucide-vue-next";
 import { useAddressStore } from "@/stores/addressStore";
+
 
 // Reactive data
 const searchQuery = ref("");

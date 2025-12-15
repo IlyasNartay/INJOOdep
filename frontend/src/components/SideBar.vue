@@ -95,7 +95,7 @@ const menuItems = computed(() => [
   },
   { label: "Добавить блюда", to: "/adddishes", roles: ["admin", "manager"], icon: "line-md:document-add" },
   { label: "Сделать заказ", to: "/Basket", roles: ["customer", "guest"], icon: "line-md:document-list" },
-  { label: "Мои заказы", to: "/myorder", roles: ["customer", "guest"], icon: "line-md:document-list" },
+  { label: "Мои заказы", to: "/myorder", roles: ["customer"], icon: "line-md:document-list" },
   { label: "Выход", to: "/", roles: ["admin", "manager", "customer", "guest"], icon: "line-md:clipboard-arrow" },
 ]);
 const logout = () => {

@@ -127,6 +127,7 @@
               </button>
             </div>
           </CustomModal>
+
           <CustomModal v-if="failInRest">
             <div
               class="relative z-10 backdrop-blur-md bg-white/20 border border-white/30 p-6 rounded-2xl shadow-xl w-[90%] max-w-md text-center"
@@ -189,51 +190,80 @@
                 Оформить заказ
               </button>
 
-              <div class="flex justify-center">
-                <div
-                  class="bg-white px-6 py-3 rounded-lg shadow-sm border border-gray-200"
-                >
-                  <div class="flex items-center space-x-2">
-                    <img class="w-auto h-8" src="/KaspiQR.webp" />
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
-        <CustomModal v-if="showPhoneModal">
+        <CustomModal v-if="showPhoneModal"
+        @click.self="showPhoneModal = false"
+        >
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+  >
+    <div
+      class="relative w-[90vw] max-w-md rounded-2xl bg-white shadow-2xl p-6 animate-fadeIn"
+    >
+      <!-- Close -->
+      <button
+        @click="showPhoneModal = false"
+        class="absolute top-3 right-3 text-gray-400 hover:text-gray-700 transition"
+      >
+        ✕
+      </button>
+
+      <!-- Header -->
+      <div class="flex items-center gap-3 mb-4">
+        <div
+          class="w-10 h-10 flex items-center justify-center rounded-full bg-green-100 text-green-600 text-xl"
+        >
+          <img           class="w-10 h-10 flex items-center justify-center rounded-full bg-green-100 text-green-600 text-xl"
+ src="/kaspiPhoto2.webp"/>
+        </div>
+        <h2 class="text-lg font-semibold text-gray-800">
+          Kaspi
+        </h2>
+      </div>
+
+      <!-- Input -->
+      <label class="block text-sm font-medium text-gray-700 mb-1">
+        Номер счета для оплаты
+      </label>
+      <input
+        v-model="kaspiPhone"
+        type="tel"
+        placeholder="87070000000"
+        class="w-full rounded-lg border border-gray-300 px-4 py-2 mb-5 outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 transition"
+      />
+
+      <!-- Button -->
+      <button
+        @click="handleCheckout"
+        class="w-full rounded-lg bg-green-500 py-3 font-semibold text-white hover:bg-green-600 active:scale-[0.98] transition"
+      >
+        Отправить счёт
+      </button>
+    </div>
+  </div>
+</CustomModal>
+
+        <CustomModal v-if="fail">
           <div
-            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+            class="relative z-10 backdrop-blur-md bg-white/20 border border-white/30 p-6 rounded-2xl shadow-xl w-[90%] max-w-md text-center"
           >
-            <div class="relative p-4 bg-white rounded-lg w-[90vw] max-w-md">
-              <!-- Кнопка закрытия -->
-              <button
-                @click="showPhoneModal = false"
-                class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-200 transition"
-              >
-                ✕
-              </button>
-
-              <h2 class="text-lg font-semibold mb-4">Введите Kaspi номер</h2>
-
-              <!-- Поле ввода Kaspi -->
-              <label class="block text-sm font-medium mb-1"
-                >Номер телефона Kaspi</label
-              >
-              <input
-                v-model="kaspiPhone"
-                type="text"
-                placeholder="87070000000"
-                class="w-full border rounded px-3 py-2 mb-4 outline-none focus:ring focus:ring-blue-300"
-              />
-
-              <button
-                @click="handleCheckout"
-                class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 w-full"
-              >
-                Сохранить
-              </button>
-            </div>
+            <img
+              src="/fail-modal.svg"
+              alt="Успешно"
+              class="w-16 h-16 mx-auto mb-4"
+            />
+            <h3 class="text-xl font-semibold text-black mb-2">
+              Что то пошло не так!
+            </h3>
+            <p class="text-black mb-4">Укажите адрес доставки!</p>
+            <button
+              @click="fail = false"
+              class="bg-white/80 text-blue-700 px-6 py-2 rounded-lg hover:bg-white transition font-semibold"
+            >
+              Закрыть
+            </button>
           </div>
         </CustomModal>
       </div>
@@ -242,13 +272,14 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, onBeforeUnmount } from "vue";
 import { Plus as PlusIcon, Minus as MinusIcon } from "lucide-vue-next";
 import { useCartStore } from "/src/stores/Basket.js";
 import CustomModal from "@/components/CustomModal.vue";
 import axios from "axios";
 import Loader from "@/components/Loader.vue";
 import { useAddressStore } from "@/stores/addressStore";
+import { useAutoClose } from '@/stores/useAutoClose'
 
 const cartI = useCartStore();
 const isLoading = ref(false);
@@ -256,7 +287,7 @@ const image_url = `${import.meta.env.VITE_API_BASE_URL}`;
 const success = ref(false);
 const failInRest = ref(false);
 const userRole = localStorage.getItem("userRole");
-
+const fail = ref(false)
 const orderNote = ref("");
 const agreeToTerms = ref(false);
 const store = useAddressStore();
@@ -264,6 +295,8 @@ const role = localStorage.getItem("userRole");
 const showPhoneModal = ref(false);
 const address = ref([{ address: "" }]);
 const kaspiPhone = ref("");
+let table_id = ref(localStorage.getItem("selectedTable"));
+let timer = null;
 
 const getTableTitle = (userRole) => {
   if (role === "guest") return "Выберите свой стол!";
@@ -280,7 +313,6 @@ const makeOrderGuestorCustomer = () => {
     openPhoneModal();
   }
 };
-let table_id = ref(localStorage.getItem("selectedTable"));
 function remove(id) {
   cartI.removeItem(id);
 }
@@ -294,7 +326,9 @@ const toggleCartItem = (item) => {
     cartItems.value.push({ ...item, quantity: 1 });
   }
 };
-
+const closeModal = () =>{
+  
+}
 // Methods
 const increaseQuantity = (itemId) => {
   const item = cartI.items.find((item) => item.id === itemId);
@@ -319,16 +353,6 @@ const handleCheckoutForGuest = async () => {
       quantity: item.quantity || 1, // или другое поле, если у тебя есть quantity
     })),
   };
-  if (!table_id.value) {
-    // Added .value to table_id
-    failInRest.value = true;
-
-    console.error("❌ Не найден table_id!");
-    isLoading.value = false; // Ensure loading state is reset
-    failInRest.value = true;
-    return;
-  }
-
   try {
     const response = await axios.post(
       `${import.meta.env.VITE_API_BASE_URL}orders/table`,
@@ -338,7 +362,6 @@ const handleCheckoutForGuest = async () => {
     console.log("✅ Заказ успешно оформлен:", response.data);
     success.value = true;
 
-    // можно очистить корзину:
     cartI.clearCart();
   } catch (error) {
     console.error(
@@ -352,20 +375,12 @@ const handleCheckoutForGuest = async () => {
 };
 
 const handleCheckout = async () => {
-  // Check if address data is available before proceeding for non-guest roles
   if (!store.address || store.address.length === 0 || !store.address[0].id) {
     console.error("❌ Не найден address_id для оформления заказа!");
-    // You should probably show an error to the user here
+        showPhoneModal.value = false;
+        fail.value = true;
     return;
   }
-
-  // Check if address data is available before proceeding for non-guest roles
-  if (!store.address || store.address.length === 0 || !store.address[0].id) {
-    console.error("❌ Не найден address_id для оформления заказа!");
-    // You should probably show an error to the user here
-    return;
-  }
-
   const checkoutData = {
     address_id: store.address[0].id, // замените на реальный ID адреса
     kaspi_number: kaspiPhone.value,
@@ -397,7 +412,7 @@ const handleCheckout = async () => {
       "❌ Ошибка при оформлении заказа:",
       error.response?.data || error.message
     );
-    // fail.value = true;
+    fail.value = true;
   } finally {
     isLoading.value = false;
   }
@@ -410,8 +425,36 @@ const makeCheckout = () => {
   }
 };
 watch(address, (newVal) => {
+  // твоя логика
   store.address = [{ address: newVal[0].address }];
+
+  // показать модалку
+  success.value = true;
+
+  // перезапуск таймера
+  if (timer) clearTimeout(timer);
+
+  timer = setTimeout(() => {
+    success.value = false;
+  }, 2000);
 });
+// watch([success, failInRest], ([successVal, failVal]) => {
+//   if (!successVal && !failVal) return;
+
+//   if (timer) clearTimeout(timer);
+
+//   timer = setTimeout(() => {
+//     success.value = false;
+//     failInRest.value = false;
+//   }, 2000);
+// });
+
+// onBeforeUnmount(() => {
+//   if (timer) clearTimeout(timer);
+// });
+useAutoClose(success, 2000)
+useAutoClose(fail, 2500)
+useAutoClose(failInRest, 3000)
 </script>
 
 <style scoped>

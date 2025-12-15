@@ -7,6 +7,9 @@ export const useCartStore = defineStore('cart', {
   }),
 
   actions: {
+    clearCart() {
+      this.items = [];
+    },
     toggleItem(restaurant) {
       const index = this.items.findIndex((item) => item.id === restaurant.id)
       if (index !== -1) {

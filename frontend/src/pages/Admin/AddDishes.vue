@@ -3,6 +3,8 @@ import { ref } from "vue";
 import axios from "axios";
 import Loader from "@/components/Loader.vue";
 import CustomModal from "@/components/CustomModal.vue";
+import { useAutoClose } from '@/stores/useAutoClose'
+
 const name = ref("");
 const description = ref("");
 const price = ref("");
@@ -71,6 +73,8 @@ const submitDish = async () => {
     isLoading.value = false;
   }
 };
+useAutoClose(success, 2000)
+useAutoClose(fail, 2500)
 </script>
 
 <template>

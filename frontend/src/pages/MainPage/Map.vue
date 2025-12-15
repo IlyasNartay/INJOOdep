@@ -290,7 +290,8 @@
 import { ref, onMounted, watch } from "vue";
 import L from "leaflet";
 import CustomModal from "@/components/CustomModal.vue";
-import { useAddressStore } from "@/stores/addressStore";
+import { useAutoClose } from '@/stores/useAutoClose'
+
 const suggestions = ref([]);
 const entrance = ref("");
 const floor = ref("");
@@ -534,6 +535,9 @@ const selectSuggestion = (item) => {
     marker = L.marker([lat, lon]).addTo(map);
   }
 };
+useAutoClose(succesModal, 2000)
+useAutoClose(failModal, 2500)
+
 </script>
 
 <style scoped>
