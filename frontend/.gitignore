@@ -28,3 +28,9 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+# Env files
+.env
+frontend/.env
+
+# Uploaded images
+uploaded_images/
