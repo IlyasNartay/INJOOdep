@@ -11,8 +11,6 @@ services:
     environment:
       TRUST_DOWNSTREAM_PROXY: "false"
     volumes:
-      - ./frontend/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./frontend/html:/usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./certs:/etc/nginx/certs
       - ./vhost:/etc/nginx/vhost.d
