@@ -8,11 +8,13 @@ services:
       - "443:443"
     labels:
       com.github.nginx-proxy.nginx: "true"
+    environment:
+      TRUST_DOWNSTREAM_PROXY: "false"
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - certs:/etc/nginx/certs
-      - vhost:/etc/nginx/vhost.d
-      - html:/usr/share/nginx/html
+      - ./certs:/etc/nginx/certs
+      - ./vhost:/etc/nginx/vhost.d
+      - ./html:/usr/share/nginx/html
     networks:
       - injoo_net
 
