@@ -14,7 +14,7 @@ async def create_dish(
     description: str = Form(""),
     price: float = Form(...),
     category: str = Form(""),
-    images: Optional[UploadFile] = File(None),
+    images: Optional[List[UploadFile]] = File(None),
     current_user: user_model.User = Depends(admin_required),
 ):
     db = SessionLocal()

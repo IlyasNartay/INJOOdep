@@ -44,7 +44,7 @@ class DishRead(BaseModel):
     description: str
     price: float
     category: str
-    images: Optional[List[DishImageRead]]
+    images: Optional[List[DishImageRead]] = None
 
     model_config = {
         "from_attributes": True
