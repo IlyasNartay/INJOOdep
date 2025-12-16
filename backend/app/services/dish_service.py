@@ -30,9 +30,10 @@ def create_dish_with_images(db: Session, dish_data: schemas.DishCreate, images) 
     db.commit()
     db.refresh(dish)
 
-    image_models = save_uploaded_files(images, dish.id)
-    db.add_all(image_models)
-    db.commit()
+    if images:
+        image_models = save_uploaded_files(images, dish.id)
+        db.add_all(image_models)
+        db.commit()
 
     db.refresh(dish)
     return schemas.DishRead.model_validate(dish)
