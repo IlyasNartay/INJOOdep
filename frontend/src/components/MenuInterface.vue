@@ -32,9 +32,7 @@ const categories = ref([
   { id: "salads", name: "Салат", icon: "/salad.png" },
   { id: "hot_food", name: "Горячие", icon: "/hot-food.png" },
   { id: "tebyan", name: "Тебян", icon: "/tebyan.svg" },
-  { id: "fish", name: "Рыба", icon: "/fish.png" },
   { id: "soup", name: "Суп", icon: "/soup.png" },
-  { id: "holiday", name: "Праздничное", icon: "/thanksgiving.png" },
   { id: "lagman", name: "Лагман", icon: "/lagman.png" },
   { id: "comyan", name: "Цомиян", icon: "/comyan.svg" },
   { id: "european", name: "Европейские", icon: "/beef.png" },
@@ -43,7 +41,10 @@ const categories = ref([
   { id: "drinks", name: "Напитки", icon: "/drink.png" },
   { id: "chicken_wings", name: "Крылышки куриные", icon: "/chicken.png" },
   { id: "pasta", name: "Паста", icon: "/pasta.svg" },
-  { id: "fries", name: "Картофель фри", icon: "/fries.png" },
+{ id: "Sushi", name: "Суши", icon: "/sushi.png" },
+  { id: "european", name: "европиски", icon: "/thanksgiving.png" },
+  { id: "chinese", name: "Қытайски кухния", icon: "/fish.png" },
+  { id: "fastfood", name: "фасд фуд", icon: "/fries.png" },
 ]);
 const cartIcon = ref(null);
 
