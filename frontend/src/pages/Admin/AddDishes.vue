@@ -41,11 +41,25 @@ const categories = ref([
 
 const submitDish = async () => {
   const formData = new FormData();
+
   formData.append("name", name.value);
   formData.append("description", description.value);
   formData.append("price", price.value);
   formData.append("category", category.value);
-  formData.append("images", file.value); // ✅ ключ как в Postman
+
+  // 🔹 если файл не выбран — подставляем дефолтный
+  if (file.value) {
+    formData.append("images", file.value);
+  } else {
+    const response = await fetch("/default-dish.jpg");
+    const blob = await response.blob();
+    const defaultFile = new File([blob], "default-dish.jpg", {
+      type: blob.type,
+    });
+
+    formData.append("images", defaultFile);
+  }
+
   isLoading.value = true;
 
   try {
@@ -55,26 +69,20 @@ const submitDish = async () => {
       {
         headers: {
           Accept: "application/json",
-          "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
       }
     );
+
     success.value = true;
-    setTimeout(() => {
-      success.value = false;
-    }, 3000);
-    console.log("✅ Успех", response.data);
   } catch (error) {
-    console.error("❌ Ошибка отправки:", error.response?.data || error.message);
     fail.value = true;
-    setTimeout(() => {
-      fail.value = false;
-    }, 3000);
+    console.error(error.response?.data || error.message);
   } finally {
     isLoading.value = false;
   }
 };
+
 useAutoClose(success, 2000)
 useAutoClose(fail, 2500)
 </script>
