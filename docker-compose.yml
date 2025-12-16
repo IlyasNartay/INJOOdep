@@ -11,10 +11,10 @@ services:
     environment:
       TRUST_DOWNSTREAM_PROXY: "false"
     volumes:
+      - /home/ubuntu/INJOOdep/certs:/etc/nginx/certs
+      - /home/ubuntu/INJOOdep/vhost:/etc/nginx/vhost.d:rw
+      - /home/ubuntu/INJOOdep/html:/usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - ./certs:/etc/nginx/certs
-      - ./vhost:/etc/nginx/vhost.d
-      - ./html:/usr/share/nginx/html
     networks:
       - injoo_net
 
@@ -28,10 +28,10 @@ services:
       DEFAULT_EMAIL: injoo.kaskelen@gmail.com
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - certs:/etc/nginx/certs
-      - vhost:/etc/nginx/vhost.d
-      - html:/usr/share/nginx/html
-      - acme:/etc/acme.sh
+      - ./certs:/etc/nginx/certs
+      - ./vhost:/etc/nginx/vhost.d
+      - ./html:/usr/share/nginx/html
+      - ./acme:/etc/acme.sh
     networks:
       - injoo_net
 
