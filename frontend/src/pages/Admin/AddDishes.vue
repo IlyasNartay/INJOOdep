@@ -37,47 +37,95 @@ const categories = ref([
   { id: "fastfood", name: "фасд фуд", icon: "/pasta.png" },
 
 ])
+const compressImage = (file, maxWidth = 1024, quality = 0.7) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = e => {
+      img.src = e.target.result;
+    };
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      const ratio = img.width > maxWidth ? maxWidth / img.width : 1;
+      canvas.width = img.width * ratio;
+      canvas.height = img.height * ratio;
+
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(
+        blob => {
+          if (!blob) return reject("Compression failed");
+          resolve(
+            new File([blob], file.name, {
+              type: "image/jpeg",
+              lastModified: Date.now(),
+            })
+          );
+        },
+        "image/jpeg",
+        quality
+      );
+    };
+
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
+const sendFormData = async (formData) => {
+  return axios.post(
+    `${import.meta.env.VITE_API_BASE_URL}menu/`,
+    formData,
+    {
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+      },
+    }
+  );
+};
 
 
 const submitDish = async () => {
-  const formData = new FormData();
-
-  formData.append("name", name.value);
-  formData.append("description", description.value);
-  formData.append("price", price.value);
-  formData.append("category", category.value);
-
-  // 🔹 если файл не выбран — подставляем дефолтный
-  if (file.value) {
-    formData.append("images", file.value);
-  } else {
-    const response = await fetch("/default-dish.jpg");
-    const blob = await response.blob();
-    const defaultFile = new File([blob], "default-dish.jpg", {
-      type: blob.type,
-    });
-
-    formData.append("images", defaultFile);
-  }
-
   isLoading.value = true;
 
   try {
-    const response = await axios.post(
+    let imageFile = file.value;
+
+    // 🔥 Сжимаем СРАЗУ, если файл > 1MB
+    if (imageFile.size > 1_000_000) {
+      console.warn("📉 Сжимаем изображение перед отправкой");
+      imageFile = await compressImage(imageFile, 1024, 0.6);
+    }
+
+    const formData = new FormData();
+    formData.append("name", name.value);
+    formData.append("description", description.value);
+    formData.append("price", price.value);
+    formData.append("category", category.value);
+    formData.append("images", imageFile);
+
+    await axios.post(
       `${import.meta.env.VITE_API_BASE_URL}menu/`,
       formData,
       {
         headers: {
-          Accept: "application/json",
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
       }
     );
 
     success.value = true;
+    setTimeout(() => (success.value = false), 3000);
+
   } catch (error) {
+    console.error("❌ Ошибка:", error.message);
     fail.value = true;
-    console.error(error.response?.data || error.message);
+    setTimeout(() => (fail.value = false), 3000);
   } finally {
     isLoading.value = false;
   }
