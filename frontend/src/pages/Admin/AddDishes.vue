@@ -97,10 +97,8 @@ const submitDish = async () => {
     let imageFile = file.value;
 
     // 🔥 Сжимаем СРАЗУ, если файл > 1MB
-    if (imageFile.size > 1_000_000) {
       console.warn("📉 Сжимаем изображение перед отправкой");
       imageFile = await compressImage(imageFile, 1024, 0.6);
-    }
 
     const formData = new FormData();
     formData.append("name", name.value);
