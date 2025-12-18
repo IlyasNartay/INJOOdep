@@ -146,7 +146,7 @@ P.S.
 
 ## 👨‍💻 Authors
 
-**Ilyas Nartay**
+**Nartay Iliyas**
 🎓 Computer Science Student
 🚀 Backend Developer
 
