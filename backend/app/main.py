@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import auth, menu, order, address
+from app.routers import auth, menu, order, address, sitemap
 from app.database import Base, engine
 from fastapi.middleware.cors import CORSMiddleware
 from app import models
@@ -49,6 +49,7 @@ app.include_router(auth.router, prefix="/auth", tags=["Auth"])
 app.include_router(menu.router, prefix="/menu", tags=["Menu"])
 app.include_router(order.router, prefix="/orders", tags=["Orders"])
 app.include_router(address.router, prefix="/addresses", tags=["Addresses"])
+app.include_router(sitemap.router)
 
 app.add_middleware(
     CORSMiddleware,
