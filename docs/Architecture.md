@@ -47,7 +47,7 @@ Short description of each component:
 ## 4. Data Flow
 1. **User action:** Customer places an order through the frontend.  
 2. **Request processing:** Frontend sends POST request to backend API.  
-3. **Backend logic:** Monolithic backend validates data, creates order, assigns status `created`.  
+3. **Backend logic:** Monolithic backend validates data, creates order, assigns status `pending`.  
 4. **Database storage:** Order details are stored in PostgreSQL.  
 5. **Notification:** Telegram bot notifies kitchen staff of the new order.  
 6. **Order updates:** Kitchen and courier update status via API.  
