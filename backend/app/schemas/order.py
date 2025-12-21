@@ -1,6 +1,7 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from .dish import DishRead
+from datetime import datetime
 
 class DishInOrder(BaseModel):
     dish_id: int
@@ -26,6 +27,7 @@ class OrderRead(BaseModel):
     total_price: float
     kaspi_number: str
     status: str
+    created_at: datetime  # ✅ добавлено
     order_dishes: List[OrderDishRead]
 
     model_config = {
@@ -36,11 +38,13 @@ class TableOrderRead(BaseModel):
     id: int
     table_id: int
     total_price: float
+    created_at: datetime  # ✅ добавлено
     order_dishes: List[OrderDishRead]
 
     model_config = {
         "from_attributes": True
     }
+
 class TableOrderCreate(BaseModel):
     table_id: int
     dishes: List[DishInOrder]
