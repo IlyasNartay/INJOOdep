@@ -4,3 +4,4 @@ venv/
 backend/venv/
 .idea/
 .env
+/uploaded_images

@@ -55,7 +55,7 @@ def get_all_dishes(db: Session) -> List[schemas.DishRead]:
     return [schemas.DishRead.model_validate(dish) for dish in dishes]
 
 def update_dish_availability(db, dish_id: int, available: bool):
-    dish = db.query(Dish).filter(Dish.id == dish_id).first()
+    dish = db.query(models.Dish).filter(models.Dish.id == dish_id).first()
     if not dish:
         return None
 
