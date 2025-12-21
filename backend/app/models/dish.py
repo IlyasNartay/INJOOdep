@@ -9,6 +9,7 @@ class Dish(Base):
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
     price = Column(Float, nullable=False)
+    available = Column(Boolean, nullable=False, default=True)
     images = relationship("DishImage", back_populates="dish", cascade="all, delete")
     category = Column(String, nullable=True)
 

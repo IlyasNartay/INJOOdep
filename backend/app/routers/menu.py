@@ -98,3 +98,24 @@ async def delete_dish(
 def get_dishes_by_category_name(category_name: str):
     db = SessionLocal()
     return services.dish_service.get_dishes_by_category_name(db, category_name)
+
+@router.patch("/{dish_id}/availability", response_model=schemas.DishRead)
+def update_dish_availability(
+    dish_id: int,
+    available: bool = Form(...),
+    current_user: user_model.User = Depends(admin_required),
+):
+    db = SessionLocal()
+    try:
+        dish = services.dish_service.update_dish_availability(
+            db=db,
+            dish_id=dish_id,
+            available=available
+        )
+
+        if not dish:
+            raise HTTPException(status_code=404, detail="Dish not found")
+
+        return schemas.DishRead.model_validate(dish)
+    finally:
+        db.close()

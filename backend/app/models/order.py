@@ -26,9 +26,12 @@ class Order(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     address_id = Column(Integer, ForeignKey("addresses.id", ondelete="CASCADE"), nullable=False)
+
     status = Column(SqlEnum(OrderStatus), default=OrderStatus.pending, nullable=False)
     kaspi_number = Column(String, nullable=False)
     total_price = Column(Float, nullable=False)
+
+    rate_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     user = relationship("User", back_populates="orders")
     address = relationship("Address", back_populates="orders")
@@ -52,5 +55,7 @@ class TableOrder(Base):
     id = Column(Integer, primary_key=True, index=True)
     table_id = Column(Integer, index=True)
     total_price = Column(Float, nullable=False)
+
+    rate_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     dishes = relationship("TableOrderDish", back_populates="order")

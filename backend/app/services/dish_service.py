@@ -54,6 +54,15 @@ def get_all_dishes(db: Session) -> List[schemas.DishRead]:
     dishes = db.query(models.Dish).options(joinedload(models.Dish.images)).all()
     return [schemas.DishRead.model_validate(dish) for dish in dishes]
 
+def update_dish_availability(db, dish_id: int, available: bool):
+    dish = db.query(Dish).filter(Dish.id == dish_id).first()
+    if not dish:
+        return None
+
+    dish.available = available
+    db.commit()
+    db.refresh(dish)
+    return dish
 
 def update_dish(db: Session, dish_id: int, dish_data: schemas.DishCreate, images=None) -> schemas.DishRead | None:
     dish = db.query(models.Dish).filter(models.Dish.id == dish_id).first()
