@@ -44,7 +44,7 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=Token)
 def login(phone: str, password: str, db: Session = Depends(get_db)):
-    validate_kz_phone(phone)
+    # validate_kz_phone(phone)
 
     user = get_user_by_phone(db, phone)
     if not user or not verify_password(password, user.hashed_password):
