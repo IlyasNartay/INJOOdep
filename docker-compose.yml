@@ -89,6 +89,7 @@ services:
       - VIRTUAL_PORT=80
       - LETSENCRYPT_HOST=injoo.kz,www.injoo.kz
       - LETSENCRYPT_EMAIL=injoo.kaskelen@gmail.com
+      - NGINX_HTTP2_ENABLED=true
     depends_on:
       - injoo-app
     networks:
