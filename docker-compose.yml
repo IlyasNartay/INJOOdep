@@ -10,13 +10,11 @@ services:
       com.github.nginx-proxy.nginx: "true"
     environment:
       TRUST_DOWNSTREAM_PROXY: "false"
-      NGINX_HTTP2_ENABLED : true
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./certs:/etc/nginx/certs
       - ./vhost:/etc/nginx/vhost.d
       - ./html:/usr/share/nginx/html
-      - ./gzip.conf:/etc/nginx/conf.d/gzip.conf:ro
     networks:
       - injoo_net
 
@@ -89,7 +87,6 @@ services:
       - VIRTUAL_PORT=80
       - LETSENCRYPT_HOST=injoo.kz,www.injoo.kz
       - LETSENCRYPT_EMAIL=injoo.kaskelen@gmail.com
-      - NGINX_HTTP2_ENABLED=true
     depends_on:
       - injoo-app
     networks:
