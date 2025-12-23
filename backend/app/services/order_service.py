@@ -78,7 +78,7 @@ async def create_order(db: Session, order_data: schemas.OrderCreate, user: model
         kaspi_number=order_data.kaspi_number,
         address_id=order.address_id,
         total_price=order.total_price,
-        created_at=order.created_at,
+        rate_at=order.rate_at,
         status=order.status,
         order_dishes=[
             schemas.OrderDishRead(
@@ -150,7 +150,7 @@ async def create_table_order(order_data: schemas.TableOrderCreate, db: Session) 
         id=order.id,
         table_id=order.table_id,
         total_price=order.total_price,
-        created_at=order.created_at,
+        rate_at=order.rate_at,
         order_dishes=[
             schemas.OrderDishRead(
                 dish=schemas.DishRead.model_validate(od.dish),
@@ -190,7 +190,7 @@ def get_my_orders(
         orders = (
             db.query(models.Order)
             .filter(models.Order.user_id == current_user.id)
-            .order_by(models.Order.created_at.desc())
+            .order_by(models.Order.rate_at.desc())
             .all()
         )
         return [schemas.OrderRead.model_validate(order, from_attributes=True) for order in orders]
