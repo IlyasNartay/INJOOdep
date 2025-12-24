@@ -20,38 +20,45 @@
               <span
                 class="text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none"
               >
-                {{
-                  shortAddress(address[0]?.address.full || address[0]?.address)
-                }}
+                <span
+                  class="text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none"
+                >
+                  {{ shortAddress(address) }}
+                </span>
               </span>
               <ChevronDownIcon class="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
             </div>
           </div>
-
-          <div
-            v-if="isModalOpen"
-            @click.self="closeModal"
-
-            class="fixed inset-0 z-50 flex items-center justify-center h-[800px] bg-black/50 backdrop-blur-sm p-4"
-          >
+          <teleport to="body">
             <div
-              class="flex flex-col w-full max-w-[800px] h-[90vh] max-h-[1000px] bg-white rounded-lg overflow-scroll"
+              v-if="isModalOpen"
+              @click.self="closeModal"
+              class="fixed inset-0 z-50 flex items-center justify-center w-full h-full bg-black/50 backdrop-blur-sm p-4"
             >
-              <div class="flex justify-between items-center p-4 border-b">
-                <h3 class="text-lg font-semibold">Выберите адрес</h3>
-                <button
-                  @click="closeModal()"
-                  class="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <CrossIcon class="w-5 h-5" />
-                </button>
-              </div>
+              <div
+                class="flex flex-col w-full max-w-[800px] h-[90vh] max-h-[1000px] bg-white rounded-lg overflow-scroll"
+              >
+                <div class="flex justify-between items-center p-4 border-b">
+                  <h3 class="text-lg font-semibold">Выберите адрес</h3>
+                  <button
+                    @click="closeModal()"
+                    class="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <CrossIcon class="w-5 h-5" />
+                  </button>
+                </div>
 
-              <div class="flex-1">
-                <Map v-model:address="selectedAddress" />
+                <div class="flex-1">
+                  <Map
+                    v-model:address="selectedAddress"
+                    v-model:entrance="entrance"
+                    v-model:floor="floor"
+                    v-model:apartment="apartment"
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          </teleport>
           <div class="hidden md:flex flex-1 max-w-md mx-4 lg:mx-8">
             <div class="relative w-full">
               <SearchIcon
@@ -94,7 +101,6 @@
 
     <!-- Main Content -->
     <MenuInterface />
-    
   </div>
 </template>
 
@@ -112,18 +118,23 @@ import {
 } from "lucide-vue-next";
 import { useAddressStore } from "@/stores/addressStore";
 
-
 // Reactive data
 const searchQuery = ref("");
 const showMobileSearch = ref(false);
-const address = ref([{ address: "" }]);
 const selectedAddress = ref("");
+const address = ref("");
+const entrance = ref("");
+const floor = ref("");
+const apartment = ref("");
 
 const store = useAddressStore();
 const isModalOpen = ref(false);
 
+// В Main.vue исправьте это:
 function openModal() {
-  selectedAddress.value = address.value[0]?.address ?? "";
+  selectedAddress.value = address.value; // У вас было .value[0] - это неверно для строки
+  // entrance, floor, apartment в Main.vue уже содержат данные из getAdress()
+  // и они автоматически передадутся в Map через v-model
   isModalOpen.value = true;
 }
 function closeModal() {
@@ -144,13 +155,35 @@ const getAdress = async () => {
         },
       }
     );
-    address.value = response.data || "Введите адрес";
-    store.setAddress(address.value);
+
+    const data = response.data;
+
+    if (data && data.length > 0) {
+      const lastEntry = data[data.length - 1];
+
+      // 1. Заполняем локальные переменные (те, что в v-model)
+      address.value = lastEntry.address || "";
+      entrance.value = lastEntry.entrance || "";
+      floor.value = lastEntry.floor || "";
+      apartment.value = lastEntry.apartment || "";
+
+      // 2. Передаем всё в стор одним объектом
+      store.setFullAddress({
+        address: address.value,
+        entrance: entrance.value,
+        floor: floor.value,
+        apartment: apartment.value,
+      });
+
+      // 3. Синхронизируем карту (если функция объявлена)
+      if (typeof searchAddress === "function") {
+        searchAddress();
+      }
+    }
   } catch (error) {
-    console.error("Ошибка при получении меню:", error);
+    console.error("Ошибка при получении адресов:", error);
   }
 };
-
 onMounted(() => {
   getAdress();
 });

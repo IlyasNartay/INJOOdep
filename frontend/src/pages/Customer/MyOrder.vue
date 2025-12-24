@@ -220,14 +220,16 @@ const getOrders = async () => {
         },
       }
     );
-    orders.value = response.data;
+    
+    // Переворачиваем массив, чтобы последние заказы были первыми
+    orders.value = response.data.reverse(); 
+    
     console.log(orders.value, "ord");
   } catch (error) {
     console.error(
       "Ошибка при получении заказов:",
       error.response?.data || error.message
     );
-    console.log(orders.value, "ord");
   } finally {
     isLoading.value = false;
   }

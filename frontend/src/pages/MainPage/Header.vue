@@ -29,7 +29,7 @@
         </a>
 
         <!-- Mobile Menu Button -->
-        <button
+        <!-- <button
           @click="toggleMobileMenu"
           class="md:hidden bg-green-200 hover:bg-green-300 text-gray-900 px-4 py-2 rounded-lg"
         >
@@ -46,72 +46,75 @@
               d="M4 6h16M4 12h16M4 18h16"
             ></path>
           </svg>
-        </button>
+        </button> -->
       </nav>
 
       <!-- Mobile Navigation Menu -->
       <div
-  v-if="mobileMenuOpen"
-  class="fixed inset-0 z-50 md:hidden bg-white bg-opacity-95 backdrop-blur-sm flex flex-col"
->
-  <!-- Header -->
-  <div class="flex items-center justify-between px-6 py-4 border-b">
-    <!-- Логотип -->
-    <h1 class="text-xl font-bold text-gray-900">INJOO</h1>
-
-    <!-- Кнопка закрытия -->
-    <button
-      @click="mobileMenuOpen = false"
-      class="p-2 rounded-full hover:bg-gray-200 transition-colors"
-    >
-      <!-- Иконка крестика -->
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-6 w-6 text-gray-800"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        stroke-width="2"
+        v-if="mobileMenuOpen"
+        class="fixed inset-0 z-50 md:hidden bg-white bg-opacity-95 backdrop-blur-sm flex flex-col"
       >
-        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-      </svg>
-    </button>
-  </div>
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b">
+          <!-- Логотип -->
+          <h1 class="text-xl font-bold text-gray-900">INJOO</h1>
 
-  <!-- Navigation -->
-  <div class="flex flex-col items-center justify-center flex-1 space-y-8">
-    <a
-      href="#"
-      class="text-2xl font-semibold text-gray-900 hover:text-cyan-600 transition-colors"
-    >
-      Главная
-    </a>
-    <a
-      href="#"
-      class="text-2xl font-semibold text-gray-900 hover:text-cyan-600 transition-colors"
-    >
-      О нас
-    </a>
-    <a
-      href="#"
-      class="text-2xl font-semibold text-gray-900 hover:text-cyan-600 transition-colors"
-    >
-      Меню
-    </a>
-    <a
-      href="#"
-      class="text-2xl font-semibold text-gray-900 hover:text-cyan-600 transition-colors"
-    >
-      Контакты
-    </a>
-  </div>
+          <!-- Кнопка закрытия -->
+          <button
+            @click="mobileMenuOpen = false"
+            class="p-2 rounded-full hover:bg-gray-200 transition-colors"
+          >
+            <!-- Иконка крестика -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6 text-gray-800"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
 
-  <!-- Footer (например, соцсети или копирайт) -->
-  <div class="px-6 py-4 border-t text-center text-sm text-gray-500">
-    © 2025 INJOO. Все права защищены.
-  </div>
-</div>
+        <!-- Navigation -->
+        <div class="flex flex-col items-center justify-center flex-1 space-y-8">
+          <a
+            href="#"
+            class="text-2xl font-semibold text-gray-900 hover:text-cyan-600 transition-colors"
+          >
+            Главная
+          </a>
+          <a
+            href="#"
+            class="text-2xl font-semibold text-gray-900 hover:text-cyan-600 transition-colors"
+          >
+            О нас
+          </a>
+          <a
+            href="#"
+            class="text-2xl font-semibold text-gray-900 hover:text-cyan-600 transition-colors"
+          >
+            Меню
+          </a>
+          <a
+            href="#"
+            class="text-2xl font-semibold text-gray-900 hover:text-cyan-600 transition-colors"
+          >
+            Контакты
+          </a>
+        </div>
 
+        <!-- Footer (например, соцсети или копирайт) -->
+        <div class="px-6 py-4 border-t text-center text-sm text-gray-500">
+          © 2025 INJOO. Все права защищены.
+        </div>
+      </div>
 
       <!-- Main Content -->
       <main

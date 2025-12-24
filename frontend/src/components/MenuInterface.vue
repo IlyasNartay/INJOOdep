@@ -14,7 +14,7 @@ import Loader from "./Loader.vue";
 import { useCartStore } from "/src/stores/Basket.js";
 import { RouterLink, useRouter } from "vue-router";
 import CustomModal from "./CustomModal.vue";
-import { useAutoClose } from '@/stores/useAutoClose'
+import { useAutoClose } from "@/stores/useAutoClose";
 
 const filterName = ref(null);
 const isLoading = ref(false);
@@ -25,7 +25,7 @@ const cart = useCartStore();
 const role = localStorage.getItem("userRole");
 const editingDish = ref(null); // объект редактируемого блюда
 const showEditModal = ref(false);
-const router = useRouter()
+const router = useRouter();
 const categories = ref([
   { id: "all", name: "Все блюда", icon: "/all-food.svg" },
   { id: "vegetarian", name: "Вегетерианские", icon: "/vegetables.svg" },
@@ -41,21 +41,20 @@ const categories = ref([
   { id: "drinks", name: "Напитки", icon: "/drink.png" },
   { id: "chicken_wings", name: "Крылышки куриные", icon: "/chicken.png" },
   { id: "pasta", name: "Паста", icon: "/pasta.svg" },
-{ id: "Sushi", name: "Суши", icon: "/sushi.png" },
+  { id: "Sushi", name: "Суши", icon: "/sushi.png" },
   { id: "european", name: "европиски", icon: "/thanksgiving.png" },
   { id: "chinese", name: "Қытайски кухния", icon: "/fish.png" },
   { id: "fastfood", name: "фасд фуд", icon: "/fries.png" },
 ]);
 const cartIcon = ref(null);
 
-const successEdit = ref(false)
-const successDelete = ref(false)
-const fail = ref(false)
+const successEdit = ref(false);
+const successDelete = ref(false);
+const fail = ref(false);
 
 function animateToCart(event) {
   const cart = cartIcon.value;
   if (!cart) {
-    console.warn("cartIcon is null — корзина ещё не доступна");
     return;
   }
 
@@ -111,7 +110,6 @@ const filterLabel = computed(() => {
 });
 function selectCategory(category) {
   filterName.value = category.id;
-  console.log(filterName.value, "filterName");
   getExact();
 }
 const openEditModal = (dish) => {
@@ -128,10 +126,6 @@ const scrollRight = () => {
   const scrollAmount =
     window.innerWidth < 640 ? 240 : window.innerWidth < 1024 ? 260 : 280;
   scrollContainer.value?.scrollBy({ left: scrollAmount, behavior: "smooth" });
-};
-
-const selectRestaurant = (restaurantId) => {
-  console.log("Selected restaurant:", restaurantId);
 };
 
 const getMenu = async () => {
@@ -174,17 +168,46 @@ const deleteDish = async (id) => {
     );
 
     if (response.status === 200) {
-      console.log("Удалено:", id);
-      // ⬇️ Удаляем из локального списка меню
       menu.value = menu.value.filter((item) => item.id !== id);
     }
-successDelete.value = true
+    successDelete.value = true;
     return response.data;
   } catch (error) {
     console.error("Ошибка при удалении:", error);
-    fail.value =true
+    fail.value = true;
   } finally {
     isLoading.value = false;
+  }
+};
+const toggleAvailability = async (restaurant) => {
+  if (!restaurant) return;
+
+  const newStatus = !restaurant.available;
+
+  // 1. Создаем объект параметров формы (x-www-form-urlencoded)
+  const params = new URLSearchParams();
+  params.append("available", newStatus);
+
+  try {
+    const response = await axios.patch(
+      `${import.meta.env.VITE_API_BASE_URL}menu/${restaurant.id}/availability`,
+      params, // Передаем параметры вместо обычного объекта
+      {
+        headers: {
+          // 2. Указываем правильный Content-Type, который требует ваш сервер
+          "Content-Type": "application/x-www-form-urlencoded",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          Accept: "application/json",
+        },
+      }
+    );
+
+    if (response.status === 200 || response.status === 204) {
+      restaurant.available = newStatus;
+    }
+  } catch (error) {
+    console.error("Детали ошибки сервера:", error.response?.data);
+    alert("Не удалось обновить статус. Проверьте консоль.");
   }
 };
 
@@ -220,8 +243,6 @@ const saveEdit = async () => {
       }
     );
 
-    console.log("✅ Обновлено:", response.data);
-
     showEditModal.value = false;
 
     // локально обновим блюдо
@@ -231,20 +252,20 @@ const saveEdit = async () => {
     if (index !== -1) {
       menu.value[index] = { ...editingDish.value };
     }
-    successEdit.value = true
+    successEdit.value = true;
   } catch (error) {
     console.error(
       "❌ Ошибка при обновлении:",
       error.response?.data || error.message
     );
-    fail.value = true
+    fail.value = true;
   } finally {
     isLoading.value = false;
   }
 };
-useAutoClose(successEdit, 2000)
-useAutoClose(fail, 2500)
-useAutoClose(successDelete, 3000)
+useAutoClose(successEdit, 2000);
+useAutoClose(fail, 2500);
+useAutoClose(successDelete, 3000);
 
 watch(filterName, (newVal) => {
   if (newVal === "all") {
@@ -256,6 +277,7 @@ watch(filterName, (newVal) => {
 });
 onMounted(() => {
   getMenu();
+  console.log(menu, "res");
 });
 </script>
 
@@ -318,115 +340,81 @@ onMounted(() => {
           <div
             v-for="restaurant in menu"
             :key="restaurant.id"
-            class="w-[280px] max-[650px]:w-[210px] max-[450px]:w-[170px] max-[400px]:w-[160px] max-[350px]:w-[140px] max-[450px]:h-full bg-gray-800/50 border border-gray-700 mx-auto rounded-lg overflow-hidden hover:bg-gray-800/70 transition-colors cursor-pointer flex-shrink-0 pt-2"
-            @click="selectRestaurant(restaurant.id)"
+            class="w-[280px] max-[650px]:w-[210px] max-[450px]:w-[170px] max-[400px]:w-[160px] max-[350px]:w-[140px] max-[450px]:h-full bg-gray-800/50 border border-gray-700 mx-auto rounded-lg overflow-hidden hover:bg-gray-800/70 transition-colors cursor-pointer flex-shrink-0"
           >
             <div class="relative">
-              <!-- <div
-                class="absolute right-2 top-2 z-10"
-                v-if="role === 'customer' || role === 'guest'"
-              >
-                <ShoppingCartIcon
-                  @click.stop="toggleCart(restaurant)"
-                  class="w-5 h-5 sm:w-6 sm:h-6 cursor-pointer transition-colors"
-                  :class="
-                    isInCart(restaurant.id) ? 'text-green-500' : 'text-white'
-                  "
-                />
-              </div> -->
-              <div
-                class="absolute right-14 max-[450px]:right-8 max-[450px]:top-[10px] top-3 z-10"
-                v-if="role == 'admin'"
-              >
-                <PenIcon
-                  @click.stop="openEditModal(restaurant)"
-                  class="w-5 h-5 sm:w-6 sm:h-6 max-[450px]:h-[12px] max-[450px]:w-[12px] cursor-pointer transition-colors text-white"
-                />
-              </div>
               <CustomModal v-if="successEdit">
-            <div
-              class="relative z-10 backdrop-blur-md bg-white/20 border border-white/30 p-6 rounded-2xl shadow-xl w-[90%] max-w-md text-center"
-            >
-              <img
-                src="/sucsess-modal.svg"
-                alt="Успешно"
-                class="w-16 h-16 mx-auto mb-4"
-              />
-              <h3 class="text-xl font-semibold text-black mb-2">
-                Вы успешно поменяли блюдо!
-              </h3>
-              <button
-                @click="success = false"
-                class="bg-white/80 text-blue-700 px-6 py-2 rounded-lg hover:bg-white transition font-semibold"
-              >
-                Закрыть
-              </button>
-            </div>
-          </CustomModal>
-          <CustomModal v-if="fail">
-            <div
-              class="relative z-10 backdrop-blur-md bg-white/20 border border-white/30 p-6 rounded-2xl shadow-xl w-[90%] max-w-md text-center"
-            >
-              <img
-                src="/sucsess-modal.svg"
-                alt="Успешно"
-                class="w-16 h-16 mx-auto mb-4"
-              />
-              <h3 class="text-xl font-semibold text-black mb-2">
-                Что-то пошло не так!
-              </h3>
-              <button
-                @click="success = false"
-                class="bg-white/80 text-blue-700 px-6 py-2 rounded-lg hover:bg-white transition font-semibold"
-              >
-                Закрыть
-              </button>
-            </div>
-          </CustomModal>
-              <div class="absolute right-2 top-2 z-10" v-if="role == 'admin'">
                 <div
-                  class="w-8 h-8 max-[450px]:h-4 max-[450px]:w-4 rounded-full bg-red-400 flex justify-center items-center"
+                  class="relative z-10 backdrop-blur-md bg-white/20 border border-white/30 p-6 rounded-2xl shadow-xl w-[90%] max-w-md text-center"
                 >
-                  <MinusIcon
-                    @click.stop="deleteDish(restaurant.id)"
-                    class="w-5 h-5 sm:w-6 sm:h-6 max-[450px]:h-[12px] max-[450px]:w-[12px] cursor-pointer transition-colors"
+                  <img
+                    src="/sucsess-modal.svg"
+                    alt="Успешно"
+                    class="w-16 h-16 mx-auto mb-4"
                   />
+                  <h3 class="text-xl font-semibold text-black mb-2">
+                    Вы успешно поменяли блюдо!
+                  </h3>
+                  <button
+                    @click="success = false"
+                    class="bg-white/80 text-blue-700 px-6 py-2 rounded-lg hover:bg-white transition font-semibold"
+                  >
+                    Закрыть
+                  </button>
                 </div>
-              </div>
+              </CustomModal>
+              <CustomModal v-if="fail">
+                <div
+                  class="relative z-10 backdrop-blur-md bg-white/20 border border-white/30 p-6 rounded-2xl shadow-xl w-[90%] max-w-md text-center"
+                >
+                  <img
+                    src="/fail-modal.svg"
+                    alt="Не Успешно"
+                    class="w-16 h-16 mx-auto mb-4"
+                  />
+                  <h3 class="text-xl font-semibold text-black mb-2">
+                    Что-то пошло не так!
+                  </h3>
+                  <button
+                    @click="success = false"
+                    class="bg-white/80 text-blue-700 px-6 py-2 rounded-lg hover:bg-white transition font-semibold"
+                  >
+                    Закрыть
+                  </button>
+                </div>
+              </CustomModal>
               <CustomModal v-if="successDelete">
-            <div
-              class="relative z-10 backdrop-blur-md bg-white/20 border border-white/30 p-6 rounded-2xl shadow-xl w-[90%] max-w-md text-center"
-            >
-              <img
-                src="/sucsess-modal.svg"
-                alt="Успешно"
-                class="w-16 h-16 mx-auto mb-4"
-              />
-              <h3 class="text-xl font-semibold text-black mb-2">
-                Вы успешно удалили блюдо!
-              </h3>
-              <button
-                @click="success = false"
-                class="bg-white/80 text-blue-700 px-6 py-2 rounded-lg hover:bg-white transition font-semibold"
+                <div
+                  class="relative z-10 backdrop-blur-md bg-white/20 border border-white/30 p-6 rounded-2xl shadow-xl w-[90%] max-w-md text-center"
+                >
+                  <img
+                    src="/sucsess-modal.svg"
+                    alt="Успешно"
+                    class="w-16 h-16 mx-auto mb-4"
+                  />
+                  <h3 class="text-xl font-semibold text-black mb-2">
+                    Вы успешно удалили блюдо!
+                  </h3>
+                  <button
+                    @click="success = false"
+                    class="bg-white/80 text-blue-700 px-6 py-2 rounded-lg hover:bg-white transition font-semibold"
+                  >
+                    Закрыть
+                  </button>
+                </div>
+              </CustomModal>
+              <div
+                class="relative w-full aspect-[4/3] overflow-hidden rounded-xl"
               >
-                Закрыть
-              </button>
+                <img
+                  v-if="restaurant.images?.length"
+                  :src="image_url + restaurant.images[0].image_url"
+                  :alt="restaurant.name"
+                  class="w-full h-full object-cover object-center transition-transform duration-500"
+                />
+              </div>
             </div>
-          </CustomModal>
-              <!-- <img
-              :src="restaurant.images[0].image_url"
-                              class="h-[180px] max-[450px]:h-[145px] sm:h-[220px] lg:h-[300px] w-full object-cover"
-
-              > -->
-              <img
-                v-if="restaurant.images && restaurant.images.length"
-                :src="image_url + restaurant.images[0].image_url"
-                :alt="restaurant.name"
-                class="h-[180px] max-[450px]:h-[145px] sm:h-[220px] lg:h-[300px] w-full object-cover"
-              />
-              <!-- <p>image_url + restaurant.images[0].image_url</p> -->
-            </div>
-            <div class="p-3 sm:p-4 ">
+            <div class="p-3 sm:p-4">
               <h3 class="font-semibold text-white mb-1 text-sm sm:text-base">
                 {{ restaurant.name }}
               </h3>
@@ -438,25 +426,62 @@ onMounted(() => {
               <div
                 class="flex items-center justify-end gap-4 text-xs sm:text-sm"
               >
-                <div
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                  <div class=" ">
+                    <button
+                      @click.stop="toggleAvailability(restaurant)"
+                      class="px-2 py-1 rounded-xl transition-all max-[450px]:text-[8px]"
+                      :class="[
+                        // Базовые цвета зависят только от наличия товара
+                        restaurant.available
+                          ? 'bg-green-500 text-white'
+                          : 'bg-red-500 text-white',
+
+                        // Динамические эффекты зависят ТОЛЬКО от роли
+                        role === 'admin'
+                          ? 'cursor-pointer active:scale-95 hover:brightness-110 shadow-md'
+                          : 'cursor-default pointer-events-none',
+                      ]"
+                    >
+                      {{ restaurant.available ? "В наличии" : "Нет в наличии" }}
+                    </button>
+                  </div>
+                  <div
+                    class="max-[450px]:right-8 max-[450px]:top-[10px] top-3 z-10"
+                    v-if="role == 'admin'"
+                  >
+                    <PenIcon
+                      @click.stop="openEditModal(restaurant)"
+                      class="w-5 h-5 sm:w-6 sm:h-6 max-[450px]:h-[12px] max-[450px]:w-[12px] cursor-pointer transition-colors text-white"
+                    />
+                  </div>
+                  <div
+                    v-if="role == 'admin'"
+                    class="w-8 h-8 max-[450px]:h-4 max-[450px]:w-4 rounded-full bg-red-400 flex justify-center items-center"
+                  >
+                    <MinusIcon
+                      @click.stop="deleteDish(restaurant.id)"
+                      class="w-5 h-5 sm:w-6 sm:h-6 max-[450px]:h-[12px] max-[450px]:w-[12px] cursor-pointer transition-colors"
+                    />
+                  </div>
+                  <div
                   v-show="role === 'customer' || role === 'guest'"
                   class="inline-block"
                 >
                   <div
-                    @click.stop="handleAddToCart($event, restaurant)"
-                    class="w-5 h-5 sm:w-6 sm:h-6 cursor-pointer text-white"
-                  >
-                    <PlusIcon
-                      v-if="!isInCart(restaurant.id)"
-                      class="w-full h-full text-white"
-                    />
+  @click.stop="restaurant.available && handleAddToCart($event, restaurant)"
+  class="w-5 h-5 sm:w-6 sm:h-6 cursor-pointer"
+  :class="{ 'opacity-50 cursor-not-allowed': !restaurant.available }"
+>
+  <PlusIcon
+    v-if="!isInCart(restaurant.id)"
+    class="w-full h-full text-white"
+  />
+  <MinusIcon v-else class="w-full h-full text-red-400" />
+</div>
 
-                    <MinusIcon v-else class="w-full h-full text-red-400" />
-                  </div>
                 </div>
-
-                <div class="flex items-center space-x-2 sm:space-x-4">
-                  <span class="text-gray-300 text-sm sm:text-[18px]"
+                  <span class="text-gray-300 text-sm sm:text-[18px] max-[450px]:text-[12px]"
                     >{{ restaurant.price }}₸</span
                   >
                 </div>
@@ -550,23 +575,21 @@ onMounted(() => {
       </div>
     </CustomModal>
     <div
-  class="fixed bottom-4 right-4 w-12 h-12 z-50"
-  ref="cartIcon"
-  v-show="role === 'customer' || role === 'guest'"
->
-<div class="relative w-full h-full" @click="router.push('/Basket')">
-    <ShoppingCartIcon class="w-12 h-12 text-white" />
-
-    <!-- Бейдж -->
-    <span
-      v-if="totalCount > 0"
-      class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-6 h-6
-             flex items-center justify-center rounded-full font-bold shadow"
+      class="fixed bottom-4 right-4 w-12 h-12 z-50"
+      ref="cartIcon"
+      v-show="role === 'customer' || role === 'guest'"
     >
-      {{ totalCount }}
-    </span>
-  </div>
-</div>
+      <div class="relative w-full h-full" @click="router.push('/Basket')">
+        <ShoppingCartIcon class="w-12 h-12 max-[450px]:w-8 max-[450px]:h-8 text-white" />
 
+        <!-- Бейдж -->
+        <span
+          v-if="totalCount > 0"
+          class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-6 h-6 flex items-center justify-center rounded-full font-bold shadow"
+        >
+          {{ totalCount }}
+        </span>
+      </div>
+    </div>
   </div>
 </template>

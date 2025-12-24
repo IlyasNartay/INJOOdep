@@ -189,11 +189,11 @@
           <button
             @click="sendAddress"
             :class="[
-              'w-full flex items-center justify-center space-x-3 font-semibold py-4 px-8 rounded-2xl shadow-xl transform transition-all duration-300 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white hover:scale-[1.02] hover:shadow-2xl',
+              'w-full flex items-center justify-center  space-x-3 font-semibold py-4 px-8 max-[650px]:py-2 max-[650px]:px-4  rounded-2xl shadow-xl transform transition-all duration-300 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white hover:scale-[1.02] hover:shadow-2xl',
             ]"
           >
-            <CheckIcon class="h-6 w-6" />
-            <span class="text-lg">Подтвердить адрес</span>
+
+            <span class="text-lg max-[650px]:text-[12px]">Подтвердить адрес</span>
           </button>
         </div>
         <!-- Map Section -->
@@ -287,27 +287,30 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, computed } from "vue";
 import L from "leaflet";
 import CustomModal from "@/components/CustomModal.vue";
 import { useAutoClose } from '@/stores/useAutoClose'
 
 const suggestions = ref([]);
-const entrance = ref("");
-const floor = ref("");
-const apartment = ref("");
+
 const succesModal = ref(false);
 const failModal = ref(false);
 const props = defineProps({
   address: String,
+  entrance: [String, Number], // Позволяем и строку, и число
+  apartment: [String, Number],
+  floor: [String, Number]
 });
 
 // Эмиттер
-const emit = defineEmits(["update:address"]);
+// const emit = defineEmits(["update:address"]);
 
 // Локальное состояние
 const address = ref(props.address || "");
-
+const entrance = ref(props.entrance || "");
+const floor = ref(props.floor || "")
+const apartment = ref(props.apartment || "");
 // Следим за внешними изменениями
 watch(
   () => props.address,
@@ -320,7 +323,16 @@ watch(
 watch(address, (val) => {
   emit("update:address", val);
 });
+// Предположим, сюда вы сохраняете ответ от сервера
+const allAddresses = ref([]); 
 
+const lastAddress = computed(() => {
+  // Проверяем, что массив существует и в нем есть элементы
+  if (!allAddresses.value || allAddresses.value.length === 0) return null;
+  
+  // Берем последний элемент массива
+  return allAddresses.value[allAddresses.value.length - 1];
+});
 let map,
   marker,
   debounceTimer = null;
@@ -343,25 +355,41 @@ const getCurrentLocation = () => {
         marker = L.marker([latitude, longitude]).addTo(map);
       }
 
-      map.setView([latitude, longitude], 15);
+      map.setView([latitude, longitude], 17); // Увеличил зум до 17 для точности
 
-      const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=ru`;
+      // ВАЖНО: Добавлен addressdetails=1
+      const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&accept-language=ru`;
 
       try {
         const res = await fetch(url);
         const data = await res.json();
-        const displayName = data.display_name || "";
-
+        
         const isAllowed = allowedCities.some((city) =>
-          displayName.includes(city)
+          data.display_name.includes(city)
         );
+
         if (!isAllowed) {
           address.value = "";
           alert("Этот город недоступен для выбора");
           return;
         }
 
-        address.value = displayName;
+        // ЛОГИКА СБОРКИ АДРЕСА:
+        // ЛОГИКА СБОРКИ АДРЕСА:
+        const addr = data.address;
+        const street = addr.road || addr.pedestrian || addr.suburb || "";
+        const house = addr.house_number || "";
+        const city = addr.city || addr.town || addr.village || "Каскелен";
+
+        if (street) {
+          // Если есть улица, пишем "Улица, номер, Город"
+          address.value = house ? `${street}, ${house}, ${city}` : `${street}, ${city}`;
+        } else {
+          // Если кликнули в поле или на здание без улицы, берем первые 2 значимые части
+          // Это уберет индекс, область и страну
+          address.value = data.display_name.split(',').slice(0, 2).join(', ');
+        }
+
       } catch (err) {
         console.error(err);
         address.value = "Ошибка при получении адреса";
@@ -407,6 +435,9 @@ const sendAddress = async () => {
 };
 
 onMounted(() => {
+  console.log(address, 'adres')
+    console.log(entrance, 'entr')
+
   map = L.map("map", {
     maxBounds: [
       [40.0, 66.0],
@@ -430,28 +461,41 @@ onMounted(() => {
       marker = L.marker([lat, lng]).addTo(map);
     }
 
-    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ru`;
+    // ВАЖНО: Добавлен addressdetails=1
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=ru`;
 
     try {
       const res = await fetch(url);
       const data = await res.json();
-      const displayName = data.display_name || "";
-
+      
       const isAllowed = allowedCities.some((city) =>
-        displayName.includes(city)
+        data.display_name.includes(city)
       );
+
       if (!isAllowed) {
         address.value = "";
         alert("Этот город недоступен для выбора");
         return;
       }
 
-      address.value = displayName;
+      // ЛОГИКА СБОРКИ АДРЕСА:
+      const addr = data.address;
+      const street = addr.road || addr.pedestrian || addr.suburb || "";
+      const house = addr.house_number || "";
+
+      if (street) {
+        address.value = house ? `${street}, ${house}` : street;
+      } else {
+        // Если улица не определена, берем первую значимую часть
+        address.value = data.display_name.split(',')[0];
+      }
+      
     } catch (err) {
       console.error(err);
       address.value = "Ошибка при получении адреса";
     }
   });
+  getSavedAddresses();
 });
 
 const searchAddress = async () => {
@@ -494,6 +538,35 @@ const searchAddress = async () => {
     console.error(err);
   }
 };
+// Добавьте это в script setup
+const getSavedAddresses = async () => {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}addresses/`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+      },
+    });
+    const data = await response.json();
+    allAddresses.value = data;
+
+    // Если есть адреса, берем последний и записываем в инпут
+    if (data.length > 0) {
+      const last = data[data.length - 1];
+      address.value = last.address; // Вот здесь мы наполняем v-model
+      
+      // Наполняем остальные поля, если они объявлены
+      if (typeof entrance !== 'undefined') entrance.value = last.entrance || "";
+      if (typeof floor !== 'undefined') floor.value = last.floor || "";
+      if (typeof apartment !== 'undefined') apartment.value = last.apartment || "";
+      
+      // Двигаем карту к этому адресу
+      searchAddress();
+    }
+  } catch (err) {
+    console.error("Ошибка загрузки адресов:", err);
+  }
+};
+
 
 const fetchSuggestions = () => {
   if (debounceTimer) clearTimeout(debounceTimer);
@@ -535,6 +608,39 @@ const selectSuggestion = (item) => {
     marker = L.marker([lat, lon]).addTo(map);
   }
 };
+// Следим за изменениями пропсов из родителя (Main.vue)
+// const props = defineProps({
+//   address: String,
+//   entrance: [String, Number], 
+//   apartment: [String, Number],
+//   floor: [String, Number]
+// });
+
+// 1. Добавляем все необходимые эмиты
+const emit = defineEmits([
+  "update:address", 
+  "update:entrance", 
+  "update:apartment", 
+  "update:floor"
+]);
+
+// Локальное состояние
+// const address = ref(props.address || "");
+// const entrance = ref(props.entrance || "");
+// const floor = ref(props.floor || "");
+// const apartment = ref(props.apartment || "");
+
+// --- СИНХРОНИЗАЦИЯ: Из родителя в Map (когда открываем модалку) ---
+watch(() => props.address, (val) => address.value = val);
+watch(() => props.entrance, (val) => entrance.value = val);
+watch(() => props.floor, (val) => floor.value = val);
+watch(() => props.apartment, (val) => apartment.value = val);
+
+// --- СИНХРОНИЗАЦИЯ: Из Map в родителя (когда пишем в инпуты) ---
+watch(address, (val) => emit("update:address", val));
+watch(entrance, (val) => emit("update:entrance", val));
+watch(floor, (val) => emit("update:floor", val));
+watch(apartment, (val) => emit("update:apartment", val));
 useAutoClose(succesModal, 2000)
 useAutoClose(failModal, 2500)
 
