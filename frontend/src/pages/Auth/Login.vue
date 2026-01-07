@@ -28,20 +28,27 @@
           </div>
         </div>
 
-        <div class="mb-8">
-          <div class="flex items-center space-x-3 pb-2">
-            <MailIcon class="w-5 h-5 text-white/70" />
-            <input
-              v-model="data.phone"
-              type="email"
-              placeholder="Phone"
-              class="flex-1 bg-transparent text-white placeholder-white/60 text-lg focus:outline-none"
-            />
-          </div>
-          <div
-            class="h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"
-          ></div>
-        </div>
+       <div class="mb-8">
+  <div class="flex items-center space-x-3 pb-2">
+    <!-- Флаг -->
+    <span class="w-6 h-6 flex items-center justify-center text-white text-sm">
+      🇰🇿
+    </span>
+
+    <!-- Префикс +7 с другим цветом -->
+    <span class="text-pink-300 text-lg font-semibold">+7</span>
+
+    <!-- Поле телефона -->
+    <input
+      v-model="displayPhone"
+      type="tel"
+      placeholder="706 607 05 59"
+      class="flex-1 bg-transparent text-white placeholder-white/60 text-lg focus:outline-none"
+    />
+  </div>
+  <div class="h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
+</div>
+
 
         <div class="mb-8">
           <div class="flex items-center space-x-3 pb-2">
@@ -49,7 +56,7 @@
             <input
               v-model="data.password"
               type="password"
-              placeholder="Password"
+              placeholder="Пароль"
               class="flex-1 bg-transparent text-white placeholder-white/60 text-lg focus:outline-none"
             />
           </div>
@@ -110,30 +117,48 @@
 <script setup>
 import axios from "axios";
 import { useRouter } from "vue-router";
-import { ref, reactive } from "vue";
+import { ref, reactive, watch } from "vue";
 import Loader from "@/components/Loader.vue";
 import CustomModal from "@/components/CustomModal.vue";
 
 const router = useRouter();
 const isLoading = ref(false);
 const failModal = ref(false);
+
 const data = reactive({
-  password: "",
+  phone: "", // для отправки на сервер
   password: "",
 });
+
+const displayPhone = ref(""); // для отображения в input
+
+// Форматирование: 7066070559 → 706 607 05 59
+watch(displayPhone, (val) => {
+  // Убираем все кроме цифр
+  const digits = val.replace(/\D/g, "");
+
+  // Ограничиваем до 9 цифр (без +7)
+  const sliced = digits.slice(0, 10);
+  data.phone = "%2B7" + sliced; // слитно для сервера
+
+  // Форматируем красиво для отображения
+  const part1 = sliced.slice(0, 3);
+  const part2 = sliced.slice(3, 6);
+  const part3 = sliced.slice(6, 8);
+  const part4 = sliced.slice(8, 10); // последняя цифра
+  displayPhone.value = [part1, part2, part3, part4].filter(Boolean).join(" ");
+});
+
+
 const login = async () => {
-  const details = {
-    ...data,
-  };
   isLoading.value = true;
   try {
     const response = await axios.post(
-      `${import.meta.env.VITE_API_BASE_URL}auth/login?phone=${data.phone}&&password=${data.password}`
+      `${import.meta.env.VITE_API_BASE_URL}auth/login?phone=${data.phone}&password=${data.password}`
     );
     const token = response.data.access_token;
     const user_role = response.data.user_role;
     if (token) {
-      // Сохраняем токен в localStorage
       localStorage.setItem("authToken", token);
       localStorage.setItem("userRole", user_role);
     }
@@ -155,6 +180,7 @@ const login = async () => {
   }
 };
 </script>
+
 <style scoped>
 /* Additional custom styles if needed */
 .backdrop-blur-xl {

@@ -1,5 +1,4 @@
 <template>
-
   <div
     class="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-blue-900 flex items-center justify-center p-4 animated-gradient"
   >
@@ -28,10 +27,9 @@
           <h2 class="text-2xl font-semibold text-white/90 mb-2">
             Создать аккаунт
           </h2>
-          <!-- <p class="text-white/60 text-sm">Join us today and get started</p> -->
         </div>
 
-        <!-- First Name Input -->
+        <!-- Full Name Input -->
         <div class="mb-6">
           <div class="flex items-center space-x-3 pb-2">
             <UserIcon class="w-5 h-5 text-white/70" />
@@ -42,51 +40,35 @@
               class="flex-1 bg-transparent text-white placeholder-white/60 text-lg focus:outline-none"
             />
           </div>
-          <div
-            class="h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"
-          ></div>
+          <div class="h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
         </div>
-      <Loader v-if="isLoading" />
-<CustomModal v-if="failModal">
-<div
-        class="relative z-10 backdrop-blur-md bg-white/20 border border-white/30 p-6 rounded-2xl shadow-xl w-[90%] max-w-md text-center"
-      >
-        <img
-          src="/fail-modal.svg"
-          alt="Успешно"
-          class="w-16 h-16 mx-auto mb-4"
-        />
-        <h3 class="text-xl font-semibold text-black mb-2">
-          Регестрация не удалась!
-        </h3>
-        <p class="text-black mb-4">Повторите попытку позже</p>
-        <button
-          @click="failModal = false"
-          class="bg-white/80 text-blue-700 px-6 py-2 rounded-lg hover:bg-white transition font-semibold"
-        >
-          Закрыть
-        </button>
-      </div>
-</CustomModal>
-        <!-- Last Name Input -->
+
+        <!-- Phone Input -->
         <div class="mb-6">
           <div class="flex items-center space-x-3 pb-2">
-            <UserIcon class="w-5 h-5 text-white/70" />
+            <!-- Flag -->
+            <span class="w-6 h-6 flex items-center justify-center text-white text-sm">
+              🇰🇿
+            </span>
+
+            <!-- Prefix +7 -->
+            <span class="text-pink-300 text-lg font-semibold">+7</span>
+
+            <!-- Phone Field -->
             <input
-              v-model="data.phone"
-              type="text"
-              placeholder="Номер Телефона"
+              v-model="displayPhone"
+              type="tel"
+              placeholder="706 607 05 59"
               class="flex-1 bg-transparent text-white placeholder-white/60 text-lg focus:outline-none"
             />
           </div>
-          <div
-            class="h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"
-          ></div>
+          <div class="h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
         </div>
 
+        <!-- Password Input -->
         <div class="mb-6">
           <div class="flex items-center space-x-3 pb-2">
-            <LockIcon class="w-5 h-5 text-white/70" />
+            <LockClosedIcon class="w-5 h-5 text-white/70" />
             <input
               v-model="data.password"
               :type="showPassword ? 'text' : 'password'"
@@ -99,30 +81,70 @@
               class="text-white/60 hover:text-white/80 transition-colors"
             >
               <EyeIcon v-if="!showPassword" class="w-5 h-5" />
-              <EyeOffIcon v-else class="w-5 h-5" />
+              <EyeSlashIcon v-else class="w-5 h-5" />
             </button>
           </div>
+          <div class="h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
+        </div>
+
+        <!-- Terms Checkbox -->
+       <div class="mb-8">
+  <label class="flex items-center space-x-3 cursor-pointer">
+    <div
+      class="w-5 h-5 border-2 border-white/70 rounded-md flex items-center justify-center bg-transparent"
+      :class="{'bg-white/80': termsAccepted}"
+    >
+      <!-- Галочка -->
+      <svg
+        v-if="termsAccepted"
+        xmlns="http://www.w3.org/2000/svg"
+        class="w-3 h-3 text-blue-700"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z"
+          clip-rule="evenodd"
+        />
+      </svg>
+    </div>
+    <span class="text-white/80 select-none text-sm">Я принимаю условия использования</span>
+    <input
+      type="checkbox"
+      v-model="termsAccepted"
+      class="absolute opacity-0 w-0 h-0"
+    />
+  </label>
+</div>
+
+
+        <!-- Loader -->
+        <Loader v-if="isLoading" />
+
+        <!-- Fail Modal -->
+        <CustomModal v-if="failModal">
           <div
-            class="h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"
-          ></div>
-        </div>
-        <div class="mb-8">
-          <label
-            class="flex items-start space-x-3 cursor-pointer"
-            @click="toggleTermsAccepted"
+            class="relative z-10 backdrop-blur-md bg-white/20 border border-white/30 p-6 rounded-2xl shadow-xl w-[90%] max-w-md text-center"
           >
-            <div class="relative mt-0.5">
-              <input v-model="termsAccepted" type="checkbox" class="sr-only" />
-            </div>
-          </label>
-        </div>
+            <img src="/fail-modal.svg" alt="Ошибка" class="w-16 h-16 mx-auto mb-4" />
+            <h3 class="text-xl font-semibold text-black mb-2">
+              Регистрация не удалась!
+            </h3>
+            <p class="text-black mb-4">Повторите попытку позже</p>
+            <button
+              @click="failModal = false"
+              class="bg-white/80 text-blue-700 px-6 py-2 rounded-lg hover:bg-white transition font-semibold"
+            >
+              Закрыть
+            </button>
+          </div>
+        </CustomModal>
 
         <!-- Register Button -->
         <button
           type="submit"
-          :class="[
-            'w-full py-4 rounded-2xl font-semibold text-lg tracking-wider shadow-lg transition-all duration-300 bg-gradient-to-r from-purple-600 via-purple-700 to-blue-600 text-white hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]',
-          ]"
+          class="w-full py-4 rounded-2xl font-semibold text-lg tracking-wider shadow-lg transition-all duration-300 bg-gradient-to-r from-purple-600 via-purple-700 to-blue-600 text-white hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
           @click="regis"
         >
           СОЗДАТЬ АККАУНТ
@@ -147,53 +169,77 @@
 
 <script setup>
 import axios from "axios";
-import { computed, reactive, ref } from "vue";
+import { reactive, ref, watch } from "vue";
 import Loader from "@/components/Loader.vue";
+import CustomModal from "@/components/CustomModal.vue";
 import { useRouter } from "vue-router";
+import {
+  UserPlusIcon,
+  UserIcon,
+  LockClosedIcon,
+  EyeIcon,
+  EyeSlashIcon,
+} from "@heroicons/vue/24/solid";
 
 const router = useRouter();
-const failModal = ref(false)
+const failModal = ref(false);
 const isLoading = ref(false);
+const showPassword = ref(false);
+const termsAccepted = ref(false);
+
 const data = reactive({
   full_name: "",
   phone: "",
   password: "",
 });
-// const isFormValid = computed(() => {
-//   return data.full_name.trim() !== '' &&
-//          data.email.trim() !== '' &&
-//          data.password.length >= 4 &&
 
-// })
-// const register = () => {
-//   if (!name.value || !email.value || !password.value) {
-//     alert('Пожалуйста, заполните все поля')
-//     return
-//   }
+const displayPhone = ref(""); // визуальное отображение с пробелами
 
-//   // Здесь логика регистрации
-//   alert(`Регистрация выполнена: ${name.value} (${email.value})`)
-// }
+watch(displayPhone, (val) => {
+  // оставляем только цифры
+  const digits = val.replace(/\D/g, "");
+  const sliced = digits.slice(0, 10); // 10 цифр после +7
+  data.phone = "+7" + sliced; // слитно для сервера
 
+  // форматируем красиво для отображения
+  const part1 = sliced.slice(0, 3);
+  const part2 = sliced.slice(3, 6);
+  const part3 = sliced.slice(6, 8);
+  const part4 = sliced.slice(8, 10);
+  displayPhone.value = [part1, part2, part3, part4].filter(Boolean).join(" ");
+});
+
+// Toggle password visibility
+const togglePasswordVisibility = () => {
+  showPassword.value = !showPassword.value;
+};
+
+// Toggle terms checkbox
+const toggleTermsAccepted = () => {
+  termsAccepted.value = !termsAccepted.value;
+};
+
+// Registration function
 const regis = async () => {
-  const details = { ...data };
-  isLoading.value = true;
+  if (!termsAccepted.value) {
+    alert("Пожалуйста, примите условия использования");
+    return;
+  }
 
+  isLoading.value = true;
   try {
     const response = await axios.post(
       `${import.meta.env.VITE_API_BASE_URL}auth/register`,
-      details
+      data
     );
 
-    // Проверка статуса ответа
     if (response.status === 200) {
       router.push("/login");
     }
-
     return response.data;
   } catch (error) {
-    console.error("Ошибка при регистрации:", error);
-    failModal.value = true
+    console.error("Ошибка при регистрации:", error.detail);
+    failModal.value = true;
     setTimeout(() => {
       failModal.value = false;
     }, 3000);
