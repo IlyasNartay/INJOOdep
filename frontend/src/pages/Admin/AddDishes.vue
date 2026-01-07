@@ -24,12 +24,27 @@ const fail = ref(false);
 
 /* ================== CATEGORIES ================== */
 const categories = ref([
-  { id: "salads", name: "Салаты" },
-  { id: "hot_food", name: "Горячие" },
-  { id: "soup", name: "Супы" },
-  { id: "pizza", name: "Пицца" },
-  { id: "drinks", name: "Напитки" },
-]);
+  { id: "all", name: "Все блюда", icon: "/all-food.svg" },
+  { id: "vegetarian", name: "Вегетерианские", icon: "/vegetarian.png" },
+  { id: "salads", name: "Салат", icon: "/salad.png" },
+  { id: "hot_food", name: "Горячие", icon: "/hot-food.png" },
+  { id: "tebyan", name: "Тебян", icon: "/tebyan.png" },
+  { id: "soup", name: "Суп", icon: "/soup.png" },
+  { id: "lagman", name: "Лагман", icon: "/lagman.png" },
+  { id: "comyan", name: "Цомиян", icon: "/comyan.png" },
+  { id: "european", name: "Европейские", icon: "/europe.png" },
+  { id: "pizza", name: "Пицца", icon: "/pizza.png" },
+  { id: "moti", name: "Моти", icon: "/moti.png" },
+  { id: "drinks", name: "Напитки", icon: "/drinks.png" },
+  { id: "chicken_wings", name: "Крылышки куриные", icon: "/chicken-wings.png" },
+  { id: "pasta", name: "Паста", icon: "/pasta.png" },
+  { id: "Sushi", name: "Суши", icon: "/pasta.png" },
+  { id: "european", name: "европиски", icon: "/pasta.png" },
+  { id: "chinese", name: "Қытайски кухния", icon: "/pasta.png" },
+  { id: "fastfood", name: "фасд фуд", icon: "/pasta.png" },
+
+])
+
 
 /* ================== CROPPER ================== */
 const cropperRef = ref(null);
