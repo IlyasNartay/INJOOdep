@@ -1,113 +1,111 @@
 <script setup>
 import { ref } from "vue";
 import axios from "axios";
+
 import Loader from "@/components/Loader.vue";
 import CustomModal from "@/components/CustomModal.vue";
-import { useAutoClose } from '@/stores/useAutoClose'
+import { useAutoClose } from "@/stores/useAutoClose";
+import VueCropper from "vue-cropperjs";
 
+/* ================== FORM STATE ================== */
 const name = ref("");
 const description = ref("");
 const price = ref("");
 const category = ref("");
 const file = ref(null);
+
+/* ================== PREVIEW ================== */
+const previewSrc = ref(null);
+
+/* ================== LOADING & MODALS ================== */
 const isLoading = ref(false);
 const success = ref(false);
 const fail = ref(false);
-const handleFileChange = (event) => {
-  file.value = event.target.files[0];
-};
+
+/* ================== CATEGORIES ================== */
 const categories = ref([
-  { id: "all", name: "Все блюда", icon: "/all-food.svg" },
-  { id: "vegetarian", name: "Вегетерианские", icon: "/vegetarian.png" },
-  { id: "salads", name: "Салат", icon: "/salad.png" },
-  { id: "hot_food", name: "Горячие", icon: "/hot-food.png" },
-  { id: "tebyan", name: "Тебян", icon: "/tebyan.png" },
-  { id: "soup", name: "Суп", icon: "/soup.png" },
-  { id: "lagman", name: "Лагман", icon: "/lagman.png" },
-  { id: "comyan", name: "Цомиян", icon: "/comyan.png" },
-  { id: "european", name: "Европейские", icon: "/europe.png" },
-  { id: "pizza", name: "Пицца", icon: "/pizza.png" },
-  { id: "moti", name: "Моти", icon: "/moti.png" },
-  { id: "drinks", name: "Напитки", icon: "/drinks.png" },
-  { id: "chicken_wings", name: "Крылышки куриные", icon: "/chicken-wings.png" },
-  { id: "pasta", name: "Паста", icon: "/pasta.png" },
-  { id: "Sushi", name: "Суши", icon: "/pasta.png" },
-  { id: "european", name: "европиски", icon: "/pasta.png" },
-  { id: "chinese", name: "Қытайски кухния", icon: "/pasta.png" },
-  { id: "fastfood", name: "фасд фуд", icon: "/pasta.png" },
+  { id: "salads", name: "Салаты" },
+  { id: "hot_food", name: "Горячие" },
+  { id: "soup", name: "Супы" },
+  { id: "pizza", name: "Пицца" },
+  { id: "drinks", name: "Напитки" },
+]);
 
-])
-const compressImage = (file, maxWidth = 1024, quality = 0.7) => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const reader = new FileReader();
+/* ================== CROPPER ================== */
+const cropperRef = ref(null);
+const imagePreview = ref(null);
+const showCropper = ref(false);
 
-    reader.onload = e => {
-      img.src = e.target.result;
-    };
+/* ================== DRAG & DROP ================== */
+const fileInput = ref(null);
+const isDragging = ref(false);
 
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
+const onDragOver = () => (isDragging.value = true);
+const onDragLeave = () => (isDragging.value = false);
 
-      const ratio = img.width > maxWidth ? maxWidth / img.width : 1;
-      canvas.width = img.width * ratio;
-      canvas.height = img.height * ratio;
-
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-      canvas.toBlob(
-        blob => {
-          if (!blob) return reject("Compression failed");
-          resolve(
-            new File([blob], file.name, {
-              type: "image/jpeg",
-              lastModified: Date.now(),
-            })
-          );
-        },
-        "image/jpeg",
-        quality
-      );
-    };
-
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+const openCropper = (selectedFile) => {
+  const reader = new FileReader();
+  reader.onload = () => {
+    imagePreview.value = reader.result;
+    showCropper.value = true;
+  };
+  reader.readAsDataURL(selectedFile);
 };
 
-const sendFormData = async (formData) => {
-  return axios.post(
-    `${import.meta.env.VITE_API_BASE_URL}menu/`,
-    formData,
-    {
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-      },
-    }
+const onDrop = (e) => {
+  isDragging.value = false;
+  const droppedFile = e.dataTransfer.files[0];
+  if (droppedFile) openCropper(droppedFile);
+};
+
+const onFileSelect = (e) => {
+  const selectedFile = e.target.files[0];
+  if (selectedFile) openCropper(selectedFile);
+};
+
+const triggerFileInput = () => {
+  fileInput.value.click();
+};
+
+/* ================== CROP IMAGE ================== */
+const cropImage = () => {
+  const canvas = cropperRef.value.getCroppedCanvas({
+    width: 1024,
+    height: 1024,
+    imageSmoothingQuality: "high",
+  });
+
+  canvas.toBlob(
+    (blob) => {
+      file.value = new File([blob], "dish.jpg", {
+        type: "image/jpeg",
+        lastModified: Date.now(),
+      });
+      previewSrc.value = URL.createObjectURL(file.value);
+      showCropper.value = false;
+      imagePreview.value = null;
+    },
+    "image/jpeg",
+    0.8
   );
 };
 
-
+/* ================== SUBMIT ================== */
 const submitDish = async () => {
+  if (!file.value) {
+    alert("Добавьте изображение");
+    return;
+  }
+
   isLoading.value = true;
 
   try {
-    let imageFile = file.value;
-
-    // 🔥 Сжимаем СРАЗУ, если файл > 1MB
-    if (imageFile.size > 1_000_000) {
-      console.warn("📉 Сжимаем изображение перед отправкой");
-      imageFile = await compressImage(imageFile, 1024, 0.6);
-    }
-
     const formData = new FormData();
     formData.append("name", name.value);
     formData.append("description", description.value);
     formData.append("price", price.value);
     formData.append("category", category.value);
-    formData.append("images", imageFile);
+    formData.append("images", file.value);
 
     await axios.post(
       `${import.meta.env.VITE_API_BASE_URL}menu/`,
@@ -120,144 +118,144 @@ const submitDish = async () => {
     );
 
     success.value = true;
-    setTimeout(() => (success.value = false), 3000);
-
-  } catch (error) {
-    console.error("❌ Ошибка:", error.message);
+  } catch (e) {
+    console.error(e);
     fail.value = true;
-    setTimeout(() => (fail.value = false), 3000);
   } finally {
     isLoading.value = false;
   }
 };
 
-useAutoClose(success, 2000)
-useAutoClose(fail, 2500)
+useAutoClose(success, 2000);
+useAutoClose(fail, 2500);
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800 animated-gradient">
-    <div
-      class="max-w-md w-full mx-6  bg-white shadow-xl rounded-2xl p-6 space-y-4"
-    >
-    <h2 class="text-2xl font-bold text-gray-800 text-center mb-4">
-      Добавление блюда
-    </h2>
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800">
+    <div class="max-w-md w-full bg-white rounded-2xl p-6 shadow-xl space-y-4">
 
-    <!-- Название -->
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1"
-        >Название</label
-      >
-      <input
-        v-model="name"
-        type="text"
-        placeholder="Введите название"
-        class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
-      />
-    </div>
+      <h2 class="text-2xl font-bold text-center">Добавление блюда</h2>
 
-    <!-- Описание -->
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1"
-        >Описание</label
-      >
-      <input
-        v-model="description"
-        type="text"
-        placeholder="Введите описание"
-        class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
-      />
-    </div>
-
-    <!-- Цена -->
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Цена</label>
-      <input
-        v-model="price"
-        type="number"
-        placeholder="Введите цену"
-        class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
-      />
-    </div>
-    <Loader v-if="isLoading" />
-
-    <!-- Категория -->
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">
-        Категория
-      </label>
-      <select
-        v-model="category"
-        class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
-      >
-        <option disabled value="">Выберите категорию</option>
-        <option v-for="cat in categories" :key="cat.id" :value="cat.id">
-          {{ cat.name }}
+      <!-- Название -->
+      <input v-model="name" placeholder="Название" class="input" />
+      <!-- Описание -->
+      <input v-model="description" placeholder="Описание" class="input" />
+      <!-- Цена -->
+      <input v-model="price" type="number" placeholder="Цена" class="input" />
+      <!-- Категория -->
+      <select v-model="category" class="input">
+        <option disabled value="">Категория</option>
+        <option v-for="c in categories" :key="c.id" :value="c.id">
+          {{ c.name }}
         </option>
       </select>
-    </div>
 
-    <!-- Файл -->
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1"
-        >Изображение блюда</label
-      >
-      <input
-        type="file"
-        @change="handleFileChange"
-        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-      />
-    </div>
-    <CustomModal v-if="success">
+      <!-- ================== DRAG & DROP ================== -->
       <div
-        class="relative z-10 backdrop-blur-md bg-white/20 border border-white/30 p-6 rounded-2xl shadow-xl w-[90%] max-w-md text-center"
+        @click="triggerFileInput"
+        @dragover.prevent="onDragOver"
+        @dragleave="onDragLeave"
+        @drop.prevent="onDrop"
+        class="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer
+               transition-all duration-200"
+        :class="isDragging
+          ? 'border-blue-500 bg-blue-50'
+          : 'border-gray-300 hover:border-blue-400'"
       >
-        <img
-          src="/sucsess-modal.svg"
-          alt="Успешно"
-          class="w-16 h-16 mx-auto mb-4"
+        <svg class="w-12 h-12 mx-auto mb-3 text-blue-500"
+          fill="none" stroke="currentColor" stroke-width="1.8"
+          viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M3 16l4-4a3 3 0 014 0l4 4M7 8h10a2 2 0 012 2v8a2 2 0 01-2 2H7a2 2 0 01-2-2V10a2 2 0 012-2z" />
+        </svg>
+
+        <p class="text-gray-600">
+          Перетащите изображение или
+          <span class="text-blue-600 font-semibold">нажмите</span>
+        </p>
+
+        <input
+          ref="fileInput"
+          type="file"
+          accept="image/*"
+          class="hidden"
+          @change="onFileSelect"
         />
-        <h3 class="text-xl font-semibold text-black mb-2">Блюдо добавлено!</h3>
-        <p class="text-black mb-4">Вы успешно добавили новое блюдо.</p>
+      </div>
+
+      <!-- ================== PREVIEW ================== -->
+      <div v-if="previewSrc" class="relative mt-4">
+        <img :src="previewSrc" class="w-full h-40 object-cover rounded-xl" />
         <button
-          @click="success = false"
-          class="bg-white/80 text-blue-700 px-6 py-2 rounded-lg hover:bg-white transition font-semibold"
+          @click="file = null; previewSrc = null;"
+          class="absolute top-2 right-2 bg-black/60 text-white rounded-full px-2"
         >
-          Закрыть
+          ✕
         </button>
       </div>
-    </CustomModal>
-    <CustomModal v-if="fail">
-      <div
-        class="relative z-10 backdrop-blur-md bg-white/20 border border-white/30 p-6 rounded-2xl shadow-xl w-[90%] max-w-md text-center"
-      >
-        <img
-          src="/fail-modal.svg"
-          alt="Успешно"
-          class="w-16 h-16 mx-auto mb-4"
-        />
-        <h3 class="text-xl font-semibold text-black mb-2">
-          Блюдо не добавлено!
-        </h3>
-        <p class="text-black mb-4">Повторите попытку позже</p>
-        <button
-          @click="fail = false"
-          class="bg-white/80 text-blue-700 px-6 py-2 rounded-lg hover:bg-white transition font-semibold"
-        >
-          Закрыть
-        </button>
-      </div>
-    </CustomModal>
-    <!-- Кнопка -->
-    <div class="text-center">
+
+      <Loader v-if="isLoading" />
+
       <button
         @click="submitDish"
-        class="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition"
+        class="w-full bg-blue-600 text-white py-2 rounded-xl"
       >
         Добавить блюдо
       </button>
     </div>
   </div>
-</div>
+
+  <!-- ================== CROPPER MODAL ================== -->
+  <CustomModal v-if="showCropper">
+    <div class="bg-white p-4 rounded-xl max-w-lg w-full">
+      <VueCropper
+        ref="cropperRef"
+        :src="imagePreview"
+        :aspect-ratio="1"
+        :auto-crop-area="1"
+        view-mode="1"
+        drag-mode="move"
+        class="w-full h-80"
+      />
+
+      <div class="flex gap-2 mt-4">
+        <button
+          @click="cropImage"
+          class="flex-1 bg-blue-600 text-white py-2 rounded-xl"
+        >
+          Сохранить
+        </button>
+        <button
+          @click="showCropper = false; imagePreview = null"
+          class="flex-1 bg-gray-300 py-2 rounded-xl"
+        >
+          Отмена
+        </button>
+      </div>
+    </div>
+  </CustomModal>
+
+  <!-- ================== SUCCESS ================== -->
+  <CustomModal v-if="success">
+    <div class="bg-white p-6 rounded-xl text-center">
+      <h3 class="text-xl font-semibold">Блюдо добавлено ✅</h3>
+    </div>
+  </CustomModal>
+
+  <!-- ================== FAIL ================== -->
+  <CustomModal v-if="fail">
+    <div class="bg-white p-6 rounded-xl text-center">
+      <h3 class="text-xl font-semibold text-red-600">Ошибка ❌</h3>
+    </div>
+  </CustomModal>
 </template>
+
+<style scoped>
+.input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+}
+</style>
