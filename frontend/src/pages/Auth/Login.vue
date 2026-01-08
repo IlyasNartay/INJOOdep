@@ -3,23 +3,19 @@
     class="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-blue-900 flex items-center justify-center p-4 animated-gradient"
   >
     <div class="relative w-full max-w-sm">
+      <!-- Glass background -->
       <div
         class="absolute inset-0 bg-gradient-to-br from-white/20 via-white/10 to-white/5 rounded-3xl backdrop-blur-xl border border-white/20 shadow-2xl"
       ></div>
 
       <div class="relative p-8 pt-12">
+        <!-- Avatar -->
         <div class="flex justify-center mb-12">
           <div
-            class="w-24 h-24 rounded-full bg-gradient-to-br from-pink-300/60 to-pink-400/40 flex items-center justify-center backdrop-blur-sm"
+            class="w-24 h-24 rounded-full bg-gradient-to-br from-pink-300/60 to-pink-400/40 flex items-center justify-center"
           >
-            <div
-              class="w-16 h-16 rounded-full bg-pink-200/60 flex items-center justify-center"
-            >
-              <svg
-                class="w-10 h-10 text-pink-100/80"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
+            <div class="w-16 h-16 rounded-full bg-pink-200/60 flex items-center justify-center">
+              <svg class="w-10 h-10 text-pink-100/80" fill="currentColor" viewBox="0 0 24 24">
                 <path
                   d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
                 />
@@ -28,83 +24,65 @@
           </div>
         </div>
 
-       <div class="mb-8">
-  <div class="flex items-center space-x-3 pb-2">
-    <!-- Флаг -->
-    <span class="w-6 h-6 flex items-center justify-center text-white text-sm">
-      🇰🇿
-    </span>
+        <!-- PHONE -->
+        <div class="mb-6">
+          <div class="flex items-center space-x-3 pb-2">
+            <span class="text-white">🇰🇿</span>
+            <span class="text-pink-300 text-lg font-semibold">+7</span>
 
-    <!-- Префикс +7 с другим цветом -->
-    <span class="text-pink-300 text-lg font-semibold">+7</span>
+            <input
+              v-model="displayPhone"
+              type="tel"
+              placeholder="706 607 05 59"
+              class="flex-1 bg-transparent text-white placeholder-white/60 text-lg focus:outline-none"
+              @input="errors.common = ''"
+            />
+          </div>
+          <div class="h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
+        </div>
 
-    <!-- Поле телефона -->
-    <input
-      v-model="displayPhone"
-      type="tel"
-      placeholder="706 607 05 59"
-      class="flex-1 bg-transparent text-white placeholder-white/60 text-lg focus:outline-none"
-    />
-  </div>
-  <div class="h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
-</div>
-
-
-        <div class="mb-8">
+        <!-- PASSWORD -->
+        <div class="mb-6">
           <div class="flex items-center space-x-3 pb-2">
             <LockIcon class="w-5 h-5 text-white/70" />
+
             <input
               v-model="data.password"
-              type="password"
+              :type="showPassword ? 'text' : 'password'"
               placeholder="Пароль"
               class="flex-1 bg-transparent text-white placeholder-white/60 text-lg focus:outline-none"
+              @input="errors.common = ''"
             />
-          </div>
-          <div
-            class="h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"
-          ></div>
-        </div>
-        <Loader v-if="isLoading" />
-        <CustomModal v-if="failModal">
-          <div
-            class="relative z-10 backdrop-blur-md bg-white/20 border border-white/30 p-6 rounded-2xl shadow-xl w-[90%] max-w-md text-center"
-          >
-            <img
-              src="/fail-modal.svg"
-              alt="Успешно"
-              class="w-16 h-16 mx-auto mb-4"
-            />
-            <h3 class="text-xl font-semibold text-black mb-2">
-              Вход не удался!
-            </h3>
-            <p class="text-black mb-4">Повторите попытку позже</p>
-            <button
-              @click="failModal = false"
-              class="bg-white/80 text-blue-700 px-6 py-2 rounded-lg hover:bg-white transition font-semibold"
-            >
-              Закрыть
+
+            <button type="button" @click="showPassword = !showPassword">
+              <EyeIcon v-if="!showPassword" class="w-5 h-5 text-white/70" />
+              <EyeSlashIcon v-else class="w-5 h-5 text-white/70" />
             </button>
           </div>
-        </CustomModal>
-        <div class="flex items-center justify-between mb-8">
-          <label
-            class="flex items-center space-x-2 cursor-pointer"
-            @click="toggleRememberMe"
-          >
-          </label>
+          <div class="h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
 
+          <!-- ERROR -->
+          <p v-if="errors.common" class="text-red-400 text-sm mt-2">
+            {{ errors.common }}
+          </p>
+        </div>
+
+        <!-- Loader -->
+        <Loader v-if="isLoading" />
+
+        <!-- REGISTER -->
+        <div class="flex justify-end mb-6">
           <button
-            type="button"
-            class="text-white/60 text-sm italic hover:text-white/80 transition-colors"
+            class="text-white/60 text-sm hover:text-white"
             @click="router.push('/auth')"
           >
             Зарегистрироваться
           </button>
         </div>
 
+        <!-- SUBMIT -->
         <button
-          type="submit"
-          class="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-purple-700 to-blue-600 text-white font-semibold text-lg tracking-wider shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+          class="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-purple-700 to-blue-600 text-white font-semibold text-lg tracking-wider shadow-lg hover:shadow-xl transition-all"
           @click="login"
         >
           ВОЙТИ
@@ -116,65 +94,69 @@
 
 <script setup>
 import axios from "axios";
-import { useRouter } from "vue-router";
 import { ref, reactive, watch } from "vue";
+import { useRouter } from "vue-router";
 import Loader from "@/components/Loader.vue";
-import CustomModal from "@/components/CustomModal.vue";
+import { EyeIcon, EyeSlashIcon, LockClosedIcon as LockIcon } from "@heroicons/vue/24/solid";
 
 const router = useRouter();
 const isLoading = ref(false);
-const failModal = ref(false);
+const showPassword = ref(false);
 
 const data = reactive({
-  phone: "", // для отправки на сервер
+  phone: "",
   password: "",
 });
 
-const displayPhone = ref(""); // для отображения в input
-
-// Форматирование: 7066070559 → 706 607 05 59
-watch(displayPhone, (val) => {
-  // Убираем все кроме цифр
-  const digits = val.replace(/\D/g, "");
-
-  // Ограничиваем до 9 цифр (без +7)
-  const sliced = digits.slice(0, 10);
-  data.phone = "%2B7" + sliced; // слитно для сервера
-
-  // Форматируем красиво для отображения
-  const part1 = sliced.slice(0, 3);
-  const part2 = sliced.slice(3, 6);
-  const part3 = sliced.slice(6, 8);
-  const part4 = sliced.slice(8, 10); // последняя цифра
-  displayPhone.value = [part1, part2, part3, part4].filter(Boolean).join(" ");
+const errors = reactive({
+  common: "",
 });
 
+const displayPhone = ref("");
+
+// Форматирование номера
+watch(displayPhone, (val) => {
+  const digits = val.replace(/\D/g, "").slice(0, 10);
+  data.phone = "+7" + digits;
+
+  const p1 = digits.slice(0, 3);
+  const p2 = digits.slice(3, 6);
+  const p3 = digits.slice(6, 8);
+  const p4 = digits.slice(8, 10);
+
+  displayPhone.value = [p1, p2, p3, p4].filter(Boolean).join(" ");
+});
 
 const login = async () => {
   isLoading.value = true;
+  errors.common = "";
+
   try {
     const response = await axios.post(
-      `${import.meta.env.VITE_API_BASE_URL}auth/login?phone=${data.phone}&password=${data.password}`
+        `${import.meta.env.VITE_API_BASE_URL}auth/login`,
+        null,
+        {
+          params: {
+            phone: data.phone,
+            password: data.password,
+          },
+        }
     );
-    const token = response.data.access_token;
-    const user_role = response.data.user_role;
-    if (token) {
-      localStorage.setItem("authToken", token);
-      localStorage.setItem("userRole", user_role);
-    }
-    if (user_role === "customer") {
-      router.push("/CliMain");
-    } else if (user_role === "admin") {
-      router.push("/CliMain");
-    } else {
-      console.log("no route");
-    }
-    return response.data;
+
+    const {access_token, user_role} = response.data;
+
+    localStorage.setItem("authToken", access_token);
+    localStorage.setItem("userRole", user_role);
+
+    router.push("/CliMain");
   } catch (error) {
-    failModal.value = true;
-    setTimeout(() => {
-      failModal.value = false;
-    }, 3000);
+    const detail = error?.response?.data?.detail;
+
+    if (detail === "Неверный номер или пароль") {
+      errors.common = "Неверный номер телефона или пароль";
+    } else {
+      errors.common = "Ошибка входа. Попробуйте позже";
+    }
   } finally {
     isLoading.value = false;
   }
@@ -182,35 +164,7 @@ const login = async () => {
 </script>
 
 <style scoped>
-/* Additional custom styles if needed */
 .backdrop-blur-xl {
   backdrop-filter: blur(20px);
-}
-
-/* Custom focus styles for inputs */
-input:focus {
-  outline: none;
-}
-
-/* Smooth transitions for all interactive elements */
-* {
-  transition-property: all;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Custom gradient animations */
-@keyframes gradient-shift {
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-.bg-gradient-to-r {
-  background-size: 200% 200%;
-  animation: gradient-shift 3s ease infinite;
 }
 </style>

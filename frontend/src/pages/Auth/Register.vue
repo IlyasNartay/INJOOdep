@@ -44,26 +44,25 @@
         </div>
 
         <!-- Phone Input -->
-        <div class="mb-6">
-          <div class="flex items-center space-x-3 pb-2">
-            <!-- Flag -->
-            <span class="w-6 h-6 flex items-center justify-center text-white text-sm">
-              🇰🇿
-            </span>
+<div class="mb-6">
+  <div class="flex items-center space-x-3 pb-2">
+    <span class="w-6 h-6 flex items-center justify-center text-white text-sm">
+      🇰🇿
+    </span>
+    <span class="text-pink-300 text-lg font-semibold">+7</span>
+    <input
+      v-model="displayPhone"
+      type="tel"
+      placeholder="706 607 05 59"
+      class="flex-1 bg-transparent text-white placeholder-white/60 text-lg focus:outline-none"
+    />
+  </div>
+  <div class="h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
 
-            <!-- Prefix +7 -->
-            <span class="text-pink-300 text-lg font-semibold">+7</span>
+  <!-- Ошибка телефона -->
+  <p v-if="errors.phone" class="text-red-400 text-sm mt-1">{{ errors.phone }}</p>
+</div>
 
-            <!-- Phone Field -->
-            <input
-              v-model="displayPhone"
-              type="tel"
-              placeholder="706 607 05 59"
-              class="flex-1 bg-transparent text-white placeholder-white/60 text-lg focus:outline-none"
-            />
-          </div>
-          <div class="h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
-        </div>
 
         <!-- Password Input -->
         <div class="mb-6">
@@ -193,6 +192,13 @@ const data = reactive({
   password: "",
 });
 
+const errors = reactive({
+  full_name: "",
+  phone: "",
+  password: "",
+});
+
+
 const displayPhone = ref(""); // визуальное отображение с пробелами
 
 watch(displayPhone, (val) => {
@@ -226,6 +232,9 @@ const regis = async () => {
     return;
   }
 
+  // Сбрасываем ошибки перед отправкой
+  Object.keys(errors).forEach(key => errors[key] = "");
+
   isLoading.value = true;
   try {
     const response = await axios.post(
@@ -238,11 +247,23 @@ const regis = async () => {
     }
     return response.data;
   } catch (error) {
-    console.error("Ошибка при регистрации:", error.detail);
-    failModal.value = true;
-    setTimeout(() => {
-      failModal.value = false;
-    }, 3000);
+    console.error("Ошибка при регистрации:", error);
+
+    // Если сервер возвращает detail как строку
+    if (error.response && error.response.data && error.response.data.detail) {
+      const detail = error.response.data.detail;
+
+      if (detail.includes("Телефон уже зарегистрирован")) {
+        errors.phone = "Этот телефон уже зарегистрирован";
+      } else if (detail.includes("Неверный формат казахстанского номера")) {
+        errors.phone = "Неверный формат казахстанского номера";
+      } else {
+        failModal.value = true; // на случай неизвестной ошибки
+        setTimeout(() => {
+          failModal.value = false;
+        }, 3000);
+      }
+    }
   } finally {
     isLoading.value = false;
   }
