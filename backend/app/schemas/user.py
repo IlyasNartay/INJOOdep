@@ -28,3 +28,8 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     phone: Optional[str] = None
+
+
+class LoginRequest(BaseModel):
+    phone: str
+    password: str

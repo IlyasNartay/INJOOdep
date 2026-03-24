@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User, UserRole
-from app.schemas.user import UserCreate, Token
+from app.schemas.user import UserCreate, Token, LoginRequest
 from app.utils.security import hash_password, verify_password, create_access_token
 
 router = APIRouter()
@@ -43,11 +43,11 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=Token)
-def login(phone: str, password: str, db: Session = Depends(get_db)):
+def login(login_data: LoginRequest, db: Session = Depends(get_db)):
     # validate_kz_phone(phone)
 
-    user = get_user_by_phone(db, phone)
-    if not user or not verify_password(password, user.hashed_password):
+    user = get_user_by_phone(db, login_data.phone)
+    if not user or not verify_password(login_data.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Неверный номер или пароль")
 
     access_token = create_access_token(data={"sub": user.phone})
