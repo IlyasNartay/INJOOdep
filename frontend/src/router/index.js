@@ -55,6 +55,18 @@ const router = createRouter({
         path: "main",
         name: "CliMain",
         component: Main,
+        beforeEnter: (to, from, next) => {
+          const isGuestSession =
+            localStorage.getItem("sessionMode") === SESSION_MODES.GUEST ||
+            !localStorage.getItem("authToken");
+
+          if (isGuestSession) {
+            next("/guest/order");
+            return;
+          }
+
+          next();
+        },
       },
       {
         path: "basket",

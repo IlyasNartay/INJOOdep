@@ -10,6 +10,18 @@ export const useCartStore = defineStore('cart', {
     clearCart() {
       this.items = [];
     },
+    increaseQuantity(id) {
+      const item = this.items.find((entry) => entry.id === id);
+      if (item) {
+        item.quantity += 1;
+      }
+    },
+    decreaseQuantity(id) {
+      const item = this.items.find((entry) => entry.id === id);
+      if (item && item.quantity > 1) {
+        item.quantity -= 1;
+      }
+    },
     toggleItem(restaurant) {
       const index = this.items.findIndex((item) => item.id === restaurant.id)
       if (index !== -1) {
