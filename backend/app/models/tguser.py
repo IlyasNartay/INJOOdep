@@ -1,5 +1,8 @@
 # app/models.py
-from sqlalchemy import Column, Integer, String
+from datetime import datetime
+
+from sqlalchemy import Column, DateTime, Integer, String, text
+
 from app.database import Base
 
 class TelegramUser(Base):
@@ -8,3 +11,9 @@ class TelegramUser(Base):
     id = Column(Integer, primary_key=True, index=True)
     chat_id = Column(String, unique=True, index=True)
     role = Column(String)  # "kitchen" или "courier"
+    created_at = Column(
+        DateTime,
+        nullable=True,
+        default=datetime.utcnow,
+        server_default=text("NOW()"),
+    )

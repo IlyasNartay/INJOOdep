@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="flex relative">
     <!-- Overlay (optional) -->
     <div
@@ -15,7 +15,7 @@
       ]"
       class="w-64 p-4"
     >
-      <!-- Toggle Button (показать только внутри сайдбара) -->
+      <!-- Toggle Button (РїРѕРєР°Р·Р°С‚СЊ С‚РѕР»СЊРєРѕ РІРЅСѓС‚СЂРё СЃР°Р№РґР±Р°СЂР°) -->
       <button
         @click="toggleSidebar"
         class="absolute -right-4 top-16 bg-gray-700 text-white rounded-full p-1 shadow z-50"
@@ -43,15 +43,15 @@
       </button>
 
       <!-- Logo -->
-      <div class="text-2xl font-bold mb-6">🧋 Injoo</div>
+      <div class="text-2xl font-bold mb-6">рџ§‹ Injoo</div>
 
       <!-- Menu -->
       <component
         v-for="(item, index) in filteredMenu"
         :key="index"
-        :is="item.label === 'Выход' ? 'button' : RouterLink"
-        :to="item.label === 'Выход' ? undefined : item.to"
-        @click="item.label === 'Выход' && logout()"
+        :is="item.label === 'Р’С‹С…РѕРґ' ? 'button' : RouterLink"
+        :to="item.label === 'Р’С‹С…РѕРґ' ? undefined : item.to"
+        @click="item.label === 'Р’С‹С…РѕРґ' && logout()"
         class="hover:bg-gray-700 px-3 py-2 rounded cursor-pointer flex items-center space-x-2 w-full text-left"
       >
         <span class="w-8 h-8 bg-white/20 rounded-full flex justify-center items-center">
@@ -69,41 +69,57 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from "vue";
-import { RouterLink, useRouter } from "vue-router";
+import { computed, ref, watch } from "vue";
+import { RouterLink, useRoute, useRouter } from "vue-router";
 import { Icon } from "@iconify/vue";
-const userRole = ref("guest");
+import { t } from "@/i18n";
+import { ADMIN_ROLES, ADMIN_STAFF_ROLES, AUTH_USER_ROLES, CUSTOMER_ROLES, SESSION_MODES, clearAuthStorage, currentSessionMode, currentUserRole, setSessionMode } from "@/utils/roles";
+
+const userRole = currentUserRole;
+const sessionMode = currentSessionMode;
+const route = useRoute();
 const router = useRouter();
-onMounted(() => {
-  const savedRole = localStorage.getItem("userRole") || "guest";
-  userRole.value = savedRole;
-});
+
+watch(
+  () => route.path,
+  (path) => {
+    setSessionMode(path.startsWith("/guest") ? SESSION_MODES.GUEST : SESSION_MODES.AUTH);
+  },
+  { immediate: true }
+);
 
 // Состояние сайдбара
 const isCollapsed = ref(false);
 function toggleSidebar() {
-  isCollapsed.value = !isCollapsed.value
+  isCollapsed.value = !isCollapsed.value;
 }
 
 // Все пункты меню + маршруты
 const menuItems = computed(() => [
   {
-    label: "Главная",
-    to: userRole.value === "guest" ? "/guest/order" : "/CliMain",
-    roles: ["admin", "customer", "guest"],
+    label: t("common.home"),
+    to: sessionMode.value === SESSION_MODES.GUEST ? "/guest/order" : "/customer/main",
+    roles: AUTH_USER_ROLES,
+    modes: [SESSION_MODES.GUEST, SESSION_MODES.AUTH],
     icon: "line-md:home-md",
   },
-  { label: "Добавить блюда", to: "/adddishes", roles: ["admin", "manager"], icon: "line-md:document-add" },
-  { label: "Сделать заказ", to: "/Basket", roles: ["customer", "guest"], icon: "line-md:document-list" },
-  { label: "Мои заказы", to: "/myorder", roles: ["customer"], icon: "line-md:document-list" },
-  { label: "Выход", to: "/", roles: ["admin", "manager", "customer", "guest"], icon: "line-md:clipboard-arrow" },
+  { label: t("common.statistics"), to: "/admin/stats", roles: ADMIN_ROLES, icon: "line-md:chart-bar" },
+  { label: t("common.users"), to: "/admin/users", roles: ADMIN_ROLES, icon: "line-md:account" },
+  { label: t("common.addDishes"), to: "/admin/adddishes", roles: ADMIN_STAFF_ROLES, icon: "line-md:document-add" },
+  { label: t("common.makeOrder"), to: "/customer/basket", roles: CUSTOMER_ROLES, modes: [SESSION_MODES.GUEST], icon: "line-md:document-list" },
+  { label: t("common.myOrders"), to: "/customer/myorder", roles: CUSTOMER_ROLES, icon: "line-md:document-list" },
+  { label: t("common.logout"), to: "/", roles: AUTH_USER_ROLES, modes: [SESSION_MODES.GUEST], icon: "line-md:clipboard-arrow" },
 ]);
 const logout = () => {
-  localStorage.removeItem("authToken"); // или как он у тебя называется
-  localStorage.removeItem("userRole"); // если ты сохраняешь роль
-  router.push("/"); // редирект на главную или на login
+  clearAuthStorage();
+  router.push("/");
 };
 const filteredMenu = computed(() =>
-  menuItems.value.filter((item) => item.roles.includes(userRole.value))
+  menuItems.value.filter((item) => {
+    const roleAllowed = item.roles.includes(userRole.value);
+    const modeAllowed = item.modes ? item.modes.includes(sessionMode.value) : false;
+    return roleAllowed || modeAllowed;
+  })
 );
 </script>
+

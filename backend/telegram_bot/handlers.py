@@ -2,6 +2,7 @@ from telegram_bot.bot_instance import dp, bot
 from app.database import SessionLocal
 # Необходимые модели должны быть импортированы из вашего файла app.models
 from app.models import Order, TelegramUser, Address, Dish
+from app.constants.order_status import OrderStatus
 from aiogram.types import CallbackQuery, Message
 from aiogram.types import InlineKeyboardButton as AioInlineKeyboardButton
 from aiogram.types import InlineKeyboardMarkup as AioInlineKeyboardMarkup
@@ -258,7 +259,7 @@ async def confirm_order(callback: CallbackQuery):
             return
 
         # 1. Обновляем статус заказа в базе данных
-        order.status = "accepted"
+        order.status = OrderStatus.accepted.value
         db.commit()
 
         # 3. Отправляем заказ на кухню
@@ -329,7 +330,7 @@ async def order_ready(callback: CallbackQuery):
             await callback.answer("❌ Заказ не найден.", show_alert=True)
             return
 
-        order.status = "ready"
+        order.status = OrderStatus.ready.value
         db.commit()
 
         # Удалить кнопку "Готово" после нажатия
@@ -389,7 +390,7 @@ async def order_done(callback: CallbackQuery):
             await callback.answer("❌ Заказ не найден.", show_alert=True)
             return
 
-        order.status = "done"
+        order.status = OrderStatus.done.value
         db.commit()
 
         # Редактируем сообщение курьера

@@ -3,10 +3,10 @@ from sqlalchemy.orm import Session
 from app import models, schemas
 from fastapi import HTTPException, Depends
 from app.deps import get_current_user
-import asyncio
+from app.constants.order_status import OrderStatus
 
 # Импорт Telegram-хендлеров
-from telegram_bot.handlers import send_order_to_admin, send_table_order_to_kitchen
+from telegram_bot.notifier import send_order_to_admin, send_table_order_to_kitchen
 
 
 # ===============================
@@ -23,9 +23,10 @@ async def create_order(db: Session, order_data: schemas.OrderCreate, user: model
     order = models.Order(
         user_id=user.id,
         address_id=order_data.address_id,
-        status=models.OrderStatus.pending,
+        status=OrderStatus.pending,
         total_price=0,
         kaspi_number=order_data.kaspi_number,
+        note=order_data.note,
     )
 
     total_price = 0
@@ -53,6 +54,7 @@ async def create_order(db: Session, order_data: schemas.OrderCreate, user: model
         "user_id": order.user_id,
         "address_id": order.address_id,
         "kaspi_number": order.kaspi_number,
+        "note": order.note,
         "dishes": [
             {
                 "id": d.id,
@@ -78,6 +80,7 @@ async def create_order(db: Session, order_data: schemas.OrderCreate, user: model
         kaspi_number=order_data.kaspi_number,
         address_id=order.address_id,
         total_price=order.total_price,
+        note=order.note,
         rate_at=order.rate_at,
         status=order.status,
         order_dishes=[
@@ -172,6 +175,10 @@ def get_order_by_id(db: Session, order_id: int) -> models.Order:
 
 
 def update_order_status(db: Session, order_id: int, new_status: str) -> models.Order:
+    valid_statuses = {status.value for status in OrderStatus}
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail="Invalid order status")
+
     order = get_order_by_id(db, order_id)
     order.status = new_status
     db.commit()

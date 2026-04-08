@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Делаем start.sh исполняемым
-RUN chmod +x start.sh
+RUN chmod +x start.sh start_bot.sh start_migrate.sh
 
 # Указываем переменные окружения (если надо)
 ENV PYTHONUNBUFFERED=1

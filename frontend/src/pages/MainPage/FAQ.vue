@@ -1,6 +1,6 @@
 <template>
   <div
-    class="min-h-screen bg-[url('/src/assets/InhooBubbleTea.jpg')] bg-center px-6 py-8"
+    class="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(187,247,208,0.55),_rgba(255,255,255,0.9)_38%,_rgba(254,249,195,0.75)_100%)] px-6 py-8"
   >
     <div class="max-w-7xl mx-auto">
       <!-- FAQ Badge -->

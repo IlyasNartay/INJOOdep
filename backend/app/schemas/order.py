@@ -10,6 +10,7 @@ class DishInOrder(BaseModel):
 class OrderCreate(BaseModel):
     address_id: int
     kaspi_number: str
+    note: Optional[str] = None
     dishes: List[DishInOrder]
 
 class OrderDishRead(BaseModel):
@@ -26,6 +27,7 @@ class OrderRead(BaseModel):
     address_id: int
     total_price: float
     kaspi_number: str
+    note: Optional[str] = None
     status: str
     rate_at: datetime  # ✅ добавлено
     order_dishes: List[OrderDishRead]
@@ -52,3 +54,13 @@ class TableOrderCreate(BaseModel):
     model_config = {
         "from_attributes": True
     }
+
+
+class OrderStatusOption(BaseModel):
+    key: str
+    label: str
+
+
+class OrderMetaResponse(BaseModel):
+    statuses: list[OrderStatusOption]
+    flow: list[str]

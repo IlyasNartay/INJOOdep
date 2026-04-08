@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+﻿import { createRouter, createWebHistory } from 'vue-router'
 import Header from '@/pages/MainPage/Header.vue'
 import Home from '@/pages/MainPage/Index.vue'
 import Register from '@/pages/Auth/Register.vue'
@@ -7,8 +7,11 @@ import SideBar from '@/components/SideBar.vue'
 import Main from '@/pages/Customer/Main.vue'
 import Basket from '@/pages/Customer/Basket.vue'
 import AddDishes from '@/pages/Admin/AddDishes.vue'
+import AdminStats from '@/pages/Admin/AdminStats.vue'
+import AdminUsers from '@/pages/Admin/AdminUsers.vue'
 import MyOrder from '@/pages/Customer/MyOrder.vue'
 import InRestOrder from '@/pages/Customer/InRestOrder.vue'
+import { SESSION_MODES, sanitizeAuthStorage, setSessionMode } from '@/utils/roles'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -46,23 +49,36 @@ const router = createRouter({
     meta: {
       auth: false,
     },
+    redirect: "/customer/main",
     children: [
       {
-        path: "/CliMain",
+        path: "main",
         name: "CliMain",
         component: Main,
       },
       {
-        path: "/Basket",
+        path: "basket",
         name: "Basket",
         component: Basket,
       },
       {
-        path: "/myorder",
+        path: "myorder",
         name: "MyOrder",
         component: MyOrder,
       },
     ],
+  },
+  {
+    path: "/CliMain",
+    redirect: "/customer/main",
+  },
+  {
+    path: "/Basket",
+    redirect: "/customer/basket",
+  },
+  {
+    path: "/myorder",
+    redirect: "/customer/myorder",
   },
   {
     path: "/admin",
@@ -72,12 +88,22 @@ const router = createRouter({
     },
     children: [
       {
-        path: "/CliMain",
-        name: "CliMain",
-        component: Main,
+        path: "",
+        name: "AdminStats",
+        component: AdminStats,
       },
       {
-        path: "/adddishes",
+        path: "stats",
+        name: "AdminStatsPage",
+        component: AdminStats,
+      },
+      {
+        path: "users",
+        name: "AdminUsers",
+        component: AdminUsers,
+      },
+      {
+        path: "adddishes",
         name: "AddDishes",
         component: AddDishes,
       },
@@ -91,20 +117,14 @@ const router = createRouter({
   },
   children: [
     {
-      path: "order", // ← не обязательно писать /GuestOrder (иначе получится //guest//GuestOrder)
+      path: "order", // в†ђ РЅРµ РѕР±СЏР·Р°С‚РµР»СЊРЅРѕ РїРёСЃР°С‚СЊ /GuestOrder (РёРЅР°С‡Рµ РїРѕР»СѓС‡РёС‚СЃСЏ //guest//GuestOrder)
       name: "GuestOrder",
       component: InRestOrder,
 
       beforeEnter: (to, from, next) => {
-        // Проверяем, есть ли роль
-        const role = localStorage.getItem('userRole');
+        setSessionMode(SESSION_MODES.GUEST);
+        sanitizeAuthStorage();
 
-        if (!role || role !== 'guest') {
-          localStorage.setItem('userRole', 'guest');
-          console.log('✅ Гостевая роль установлена при входе на GuestOrder');
-        }
-
-        // Если в URL есть ?table=12 — сохраняем номер стола
         if (to.query.table) {
           localStorage.setItem('selectedTable', to.query.table);
         }
@@ -119,3 +139,4 @@ const router = createRouter({
 })
 
 export default router
+

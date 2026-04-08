@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { onMounted, ref, computed, watch, nextTick } from "vue";
 import axios from "axios";
 import {
@@ -11,10 +11,12 @@ import {
   PlusIcon as PlusIcon,
 } from "lucide-vue-next";
 import Loader from "./Loader.vue";
-import { useCartStore } from "/src/stores/Basket.js";
+import { useCartStore } from "@/stores/Basket.js";
 import { RouterLink, useRouter } from "vue-router";
 import CustomModal from "./CustomModal.vue";
 import { useAutoClose } from "@/stores/useAutoClose";
+import { t } from "@/i18n";
+import { USER_ROLES, canUseCustomerUi, currentUserRole } from "@/utils/roles";
 
 const filterName = ref(null);
 const isLoading = ref(false);
@@ -22,29 +24,28 @@ const menu = ref([]);
 const scrollContainer = ref(null);
 const image_url = `${import.meta.env.VITE_API_BASE_URL}`;
 const cart = useCartStore();
-const role = localStorage.getItem("userRole");
-const editingDish = ref(null); // объект редактируемого блюда
+const role = currentUserRole;
+const editingDish = ref(null); // РѕР±СЉРµРєС‚ СЂРµРґР°РєС‚РёСЂСѓРµРјРѕРіРѕ Р±Р»СЋРґР°
 const showEditModal = ref(false);
 const router = useRouter();
-const categories = ref([
-  { id: "all", name: "Все блюда", icon: "/all-food.svg" },
-  { id: "vegetarian", name: "Вегетерианские", icon: "/vegetables.svg" },
-  { id: "salads", name: "Салат", icon: "/salad.png" },
-  { id: "hot_food", name: "Горячие", icon: "/hot-food.png" },
-  { id: "tebyan", name: "Тебян", icon: "/tebyan.svg" },
-  { id: "soup", name: "Суп", icon: "/soup.png" },
-  { id: "lagman", name: "Лагман", icon: "/lagman.png" },
-  { id: "comyan", name: "Цомиян", icon: "/comyan.svg" },
-  { id: "european", name: "Европейские", icon: "/beef.png" },
-  { id: "pizza", name: "Пицца", icon: "/pizza.svg" },
-  { id: "moti", name: "Моти", icon: "/moti.png" },
-  { id: "drinks", name: "Напитки", icon: "/drink.png" },
-  { id: "chicken_wings", name: "Крылышки куриные", icon: "/chicken.png" },
-  { id: "pasta", name: "Паста", icon: "/pasta.svg" },
-  { id: "Sushi", name: "Суши", icon: "/sushi.png" },
-  { id: "european", name: "европиски", icon: "/thanksgiving.png" },
-  { id: "chinese", name: "Қытайски кухния", icon: "/fish.png" },
-  { id: "fastfood", name: "фасд фуд", icon: "/fries.png" },
+const categories = computed(() => [
+  { id: "all", name: t("menu.categories.all"), icon: "/all-food.svg" },
+  { id: "vegetarian", name: t("menu.categories.vegetarian"), icon: "/vegetables.svg" },
+  { id: "salads", name: t("menu.categories.salads"), icon: "/salad.png" },
+  { id: "hot_food", name: t("menu.categories.hot_food"), icon: "/hot-food.png" },
+  { id: "tebyan", name: t("menu.categories.tebyan"), icon: "/tebyan.svg" },
+  { id: "soup", name: t("menu.categories.soup"), icon: "/soup.png" },
+  { id: "lagman", name: t("menu.categories.lagman"), icon: "/lagman.png" },
+  { id: "comyan", name: t("menu.categories.comyan"), icon: "/comyan.svg" },
+  { id: "european", name: t("menu.categories.european"), icon: "/beef.png" },
+  { id: "pizza", name: t("menu.categories.pizza"), icon: "/pizza.svg" },
+  { id: "moti", name: t("menu.categories.moti"), icon: "/moti.png" },
+  { id: "drinks", name: t("menu.categories.drinks"), icon: "/drink.png" },
+  { id: "chicken_wings", name: t("menu.categories.chicken_wings"), icon: "/chicken.png" },
+  { id: "pasta", name: t("menu.categories.pasta"), icon: "/pasta.svg" },
+  { id: "Sushi", name: t("menu.categories.Sushi"), icon: "/sushi.png" },
+  { id: "chinese", name: t("menu.categories.chinese"), icon: "/fish.png" },
+  { id: "fastfood", name: t("menu.categories.fastfood"), icon: "/fries.png" },
 ]);
 const cartIcon = ref(null);
 
@@ -58,16 +59,16 @@ function animateToCart(event) {
     return;
   }
 
-  // Координаты места клика
+  // РљРѕРѕСЂРґРёРЅР°С‚С‹ РјРµСЃС‚Р° РєР»РёРєР°
   const startX = event.clientX;
   const startY = event.clientY;
 
-  // Координаты корзины
+  // РљРѕРѕСЂРґРёРЅР°С‚С‹ РєРѕСЂР·РёРЅС‹
   const cartRect = cart.getBoundingClientRect();
   const endX = cartRect.left + cartRect.width / 2;
   const endY = cartRect.top + cartRect.height / 2;
 
-  // Создаём летающий элемент (можно заменить на картинку блюда)
+  // РЎРѕР·РґР°С‘Рј Р»РµС‚Р°СЋС‰РёР№ СЌР»РµРјРµРЅС‚ (РјРѕР¶РЅРѕ Р·Р°РјРµРЅРёС‚СЊ РЅР° РєР°СЂС‚РёРЅРєСѓ Р±Р»СЋРґР°)
   const fly = document.createElement("div");
   fly.style.position = "fixed";
   fly.style.left = startX + "px";
@@ -75,13 +76,13 @@ function animateToCart(event) {
   fly.style.width = "30px";
   fly.style.height = "30px";
   fly.style.borderRadius = "50%";
-  fly.style.background = "#4ade80"; // зелёный кружок
+  fly.style.background = "#4ade80"; // Р·РµР»С‘РЅС‹Р№ РєСЂСѓР¶РѕРє
   fly.style.zIndex = "9999";
   fly.style.transition = "all 0.7s cubic-bezier(0.4, 0, 0.2, 1)";
 
   document.body.appendChild(fly);
 
-  // Запуск анимации
+  // Р—Р°РїСѓСЃРє Р°РЅРёРјР°С†РёРё
   setTimeout(() => {
     fly.style.left = endX + "px";
     fly.style.top = endY + "px";
@@ -89,7 +90,7 @@ function animateToCart(event) {
     fly.style.opacity = "0";
   }, 10);
 
-  // Удаляем после завершения анимации
+  // РЈРґР°Р»СЏРµРј РїРѕСЃР»Рµ Р·Р°РІРµСЂС€РµРЅРёСЏ Р°РЅРёРјР°С†РёРё
   setTimeout(() => {
     fly.remove();
   }, 800);
@@ -98,8 +99,8 @@ const totalCount = computed(() =>
   cart.items.reduce((sum, item) => sum + item.quantity, 0)
 );
 const handleAddToCart = (event, restaurant) => {
-  animateToCart(event); // запускаем полёт
-  cart.toggleItem(restaurant); // добавляем в корзину
+  animateToCart(event); // Р·Р°РїСѓСЃРєР°РµРј РїРѕР»С‘С‚
+  cart.toggleItem(restaurant); // РґРѕР±Р°РІР»СЏРµРј РІ РєРѕСЂР·РёРЅСѓ
 };
 const isInCart = (id) => {
   return cart.isInCart(id);
@@ -113,7 +114,7 @@ function selectCategory(category) {
   getExact();
 }
 const openEditModal = (dish) => {
-  editingDish.value = { ...dish }; // копия, чтобы не мутировать напрямую
+  editingDish.value = { ...dish }; // РєРѕРїРёСЏ, С‡С‚РѕР±С‹ РЅРµ РјСѓС‚РёСЂРѕРІР°С‚СЊ РЅР°РїСЂСЏРјСѓСЋ
   showEditModal.value = true;
 };
 const scrollLeft = () => {
@@ -137,7 +138,7 @@ const getMenu = async () => {
     );
     menu.value = response.data;
   } catch (error) {
-    console.error("Ошибка при получении меню:", error);
+    console.error("РћС€РёР±РєР° РїСЂРё РїРѕР»СѓС‡РµРЅРёРё РјРµРЅСЋ:", error);
   } finally {
     isLoading.value = false;
   }
@@ -150,7 +151,7 @@ const getExact = async () => {
     );
     menu.value = response.data;
   } catch (error) {
-    console.error("Ошибка при получении меню:", error);
+    console.error("РћС€РёР±РєР° РїСЂРё РїРѕР»СѓС‡РµРЅРёРё РјРµРЅСЋ:", error);
   } finally {
     isLoading.value = false;
   }
@@ -173,7 +174,7 @@ const deleteDish = async (id) => {
     successDelete.value = true;
     return response.data;
   } catch (error) {
-    console.error("Ошибка при удалении:", error);
+    console.error("РћС€РёР±РєР° РїСЂРё СѓРґР°Р»РµРЅРёРё:", error);
     fail.value = true;
   } finally {
     isLoading.value = false;
@@ -184,17 +185,17 @@ const toggleAvailability = async (restaurant) => {
 
   const newStatus = !restaurant.available;
 
-  // 1. Создаем объект параметров формы (x-www-form-urlencoded)
+  // 1. РЎРѕР·РґР°РµРј РѕР±СЉРµРєС‚ РїР°СЂР°РјРµС‚СЂРѕРІ С„РѕСЂРјС‹ (x-www-form-urlencoded)
   const params = new URLSearchParams();
   params.append("available", newStatus);
 
   try {
     const response = await axios.patch(
       `${import.meta.env.VITE_API_BASE_URL}menu/${restaurant.id}/availability`,
-      params, // Передаем параметры вместо обычного объекта
+      params, // РџРµСЂРµРґР°РµРј РїР°СЂР°РјРµС‚СЂС‹ РІРјРµСЃС‚Рѕ РѕР±С‹С‡РЅРѕРіРѕ РѕР±СЉРµРєС‚Р°
       {
         headers: {
-          // 2. Указываем правильный Content-Type, который требует ваш сервер
+          // 2. РЈРєР°Р·С‹РІР°РµРј РїСЂР°РІРёР»СЊРЅС‹Р№ Content-Type, РєРѕС‚РѕСЂС‹Р№ С‚СЂРµР±СѓРµС‚ РІР°С€ СЃРµСЂРІРµСЂ
           "Content-Type": "application/x-www-form-urlencoded",
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
           Accept: "application/json",
@@ -206,8 +207,8 @@ const toggleAvailability = async (restaurant) => {
       restaurant.available = newStatus;
     }
   } catch (error) {
-    console.error("Детали ошибки сервера:", error.response?.data);
-    alert("Не удалось обновить статус. Проверьте консоль.");
+    console.error("Р”РµС‚Р°Р»Рё РѕС€РёР±РєРё СЃРµСЂРІРµСЂР°:", error.response?.data);
+    alert("РќРµ СѓРґР°Р»РѕСЃСЊ РѕР±РЅРѕРІРёС‚СЊ СЃС‚Р°С‚СѓСЃ. РџСЂРѕРІРµСЂСЊС‚Рµ РєРѕРЅСЃРѕР»СЊ.");
   }
 };
 
@@ -224,9 +225,9 @@ const saveEdit = async () => {
   formData.append("price", editingDish.value.price);
   formData.append("category", editingDish.value.category);
 
-  // если пользователь выбрал новое изображение
+  // РµСЃР»Рё РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РІС‹Р±СЂР°Р» РЅРѕРІРѕРµ РёР·РѕР±СЂР°Р¶РµРЅРёРµ
   if (file.value) {
-    formData.append("images", file.value); // как в POST
+    formData.append("images", file.value); // РєР°Рє РІ POST
   }
 
   isLoading.value = true;
@@ -245,7 +246,7 @@ const saveEdit = async () => {
 
     showEditModal.value = false;
 
-    // локально обновим блюдо
+    // Р»РѕРєР°Р»СЊРЅРѕ РѕР±РЅРѕРІРёРј Р±Р»СЋРґРѕ
     const index = menu.value.findIndex(
       (item) => item.id === editingDish.value.id
     );
@@ -255,7 +256,7 @@ const saveEdit = async () => {
     successEdit.value = true;
   } catch (error) {
     console.error(
-      "❌ Ошибка при обновлении:",
+      "вќЊ РћС€РёР±РєР° РїСЂРё РѕР±РЅРѕРІР»РµРЅРёРё:",
       error.response?.data || error.message
     );
     fail.value = true;
@@ -271,8 +272,8 @@ watch(filterName, (newVal) => {
   if (newVal === "all") {
     getMenu();
   } else {
-    console.log("🔍 Фильтрация по категории:", newVal);
-    // если нужно, можешь вызвать другую функцию (например getMenuByCategory(newVal))
+    console.log("рџ”Ќ Р¤РёР»СЊС‚СЂР°С†РёСЏ РїРѕ РєР°С‚РµРіРѕСЂРёРё:", newVal);
+    // РµСЃР»Рё РЅСѓР¶РЅРѕ, РјРѕР¶РµС€СЊ РІС‹Р·РІР°С‚СЊ РґСЂСѓРіСѓСЋ С„СѓРЅРєС†РёСЋ (РЅР°РїСЂРёРјРµСЂ getMenuByCategory(newVal))
   }
 });
 onMounted(() => {
@@ -311,11 +312,11 @@ onMounted(() => {
 
     <!-- Restaurant Sections -->
     <div class="space-y-6 sm:space-y-8">
-      <!-- Поздний перекус неподалёку -->
+      <!-- РџРѕР·РґРЅРёР№ РїРµСЂРµРєСѓСЃ РЅРµРїРѕРґР°Р»С‘РєСѓ -->
       <section>
         <div class="flex items-center justify-between mb-4 sm:mb-6">
           <h2 class="text-lg sm:text-xl lg:text-2xl font-bold text-white">
-            Выбранная каттегория: {{ filterLabel || "Все" }}
+            {{ t("menu.selectedCategory") }}: {{ filterLabel || t("common.all") }}
           </h2>
           <div class="flex items-center space-x-1 sm:space-x-2">
             <button
@@ -349,17 +350,17 @@ onMounted(() => {
                 >
                   <img
                     src="/sucsess-modal.svg"
-                    alt="Успешно"
+                    alt="РЈСЃРїРµС€РЅРѕ"
                     class="w-16 h-16 mx-auto mb-4"
                   />
                   <h3 class="text-xl font-semibold text-black mb-2">
-                    Вы успешно поменяли блюдо!
+                    Р’С‹ СѓСЃРїРµС€РЅРѕ РїРѕРјРµРЅСЏР»Рё Р±Р»СЋРґРѕ!
                   </h3>
                   <button
                     @click="success = false"
                     class="bg-white/80 text-blue-700 px-6 py-2 rounded-lg hover:bg-white transition font-semibold"
                   >
-                    Закрыть
+                    Р—Р°РєСЂС‹С‚СЊ
                   </button>
                 </div>
               </CustomModal>
@@ -369,17 +370,17 @@ onMounted(() => {
                 >
                   <img
                     src="/fail-modal.svg"
-                    alt="Не Успешно"
+                    alt="РќРµ РЈСЃРїРµС€РЅРѕ"
                     class="w-16 h-16 mx-auto mb-4"
                   />
                   <h3 class="text-xl font-semibold text-black mb-2">
-                    Что-то пошло не так!
+                    Р§С‚Рѕ-С‚Рѕ РїРѕС€Р»Рѕ РЅРµ С‚Р°Рє!
                   </h3>
                   <button
                     @click="success = false"
                     class="bg-white/80 text-blue-700 px-6 py-2 rounded-lg hover:bg-white transition font-semibold"
                   >
-                    Закрыть
+                    Р—Р°РєСЂС‹С‚СЊ
                   </button>
                 </div>
               </CustomModal>
@@ -389,17 +390,17 @@ onMounted(() => {
                 >
                   <img
                     src="/sucsess-modal.svg"
-                    alt="Успешно"
+                    alt="РЈСЃРїРµС€РЅРѕ"
                     class="w-16 h-16 mx-auto mb-4"
                   />
                   <h3 class="text-xl font-semibold text-black mb-2">
-                    Вы успешно удалили блюдо!
+                    Р’С‹ СѓСЃРїРµС€РЅРѕ СѓРґР°Р»РёР»Рё Р±Р»СЋРґРѕ!
                   </h3>
                   <button
                     @click="success = false"
                     class="bg-white/80 text-blue-700 px-6 py-2 rounded-lg hover:bg-white transition font-semibold"
                   >
-                    Закрыть
+                    Р—Р°РєСЂС‹С‚СЊ
                   </button>
                 </div>
               </CustomModal>
@@ -432,23 +433,23 @@ onMounted(() => {
                       @click.stop="toggleAvailability(restaurant)"
                       class="px-2 py-1 rounded-xl transition-all max-[450px]:text-[8px]"
                       :class="[
-                        // Базовые цвета зависят только от наличия товара
+                        // Р‘Р°Р·РѕРІС‹Рµ С†РІРµС‚Р° Р·Р°РІРёСЃСЏС‚ С‚РѕР»СЊРєРѕ РѕС‚ РЅР°Р»РёС‡РёСЏ С‚РѕРІР°СЂР°
                         restaurant.available
                           ? 'bg-green-500 text-white'
                           : 'bg-red-500 text-white',
 
-                        // Динамические эффекты зависят ТОЛЬКО от роли
-                        role === 'admin'
+                        // Р”РёРЅР°РјРёС‡РµСЃРєРёРµ СЌС„С„РµРєС‚С‹ Р·Р°РІРёСЃСЏС‚ РўРћР›Р¬РљРћ РѕС‚ СЂРѕР»Рё
+                        role === USER_ROLES.ADMIN
                           ? 'cursor-pointer active:scale-95 hover:brightness-110 shadow-md'
                           : 'cursor-default pointer-events-none',
                       ]"
                     >
-                      {{ restaurant.available ? "В наличии" : "Нет в наличии" }}
+                      {{ restaurant.available ? "Р’ РЅР°Р»РёС‡РёРё" : "РќРµС‚ РІ РЅР°Р»РёС‡РёРё" }}
                     </button>
                   </div>
                   <div
                     class="max-[450px]:right-8 max-[450px]:top-[10px] top-3 z-10"
-                    v-if="role == 'admin'"
+                    v-if="role === USER_ROLES.ADMIN"
                   >
                     <PenIcon
                       @click.stop="openEditModal(restaurant)"
@@ -456,7 +457,7 @@ onMounted(() => {
                     />
                   </div>
                   <div
-                    v-if="role == 'admin'"
+                    v-if="role === USER_ROLES.ADMIN"
                     class="w-8 h-8 max-[450px]:h-4 max-[450px]:w-4 rounded-full bg-red-400 flex justify-center items-center"
                   >
                     <MinusIcon
@@ -465,7 +466,7 @@ onMounted(() => {
                     />
                   </div>
                   <div
-                  v-show="role === 'customer' || role === 'guest'"
+                  v-show="canUseCustomerUi()"
                   class="inline-block"
                 >
                   <div
@@ -482,7 +483,7 @@ onMounted(() => {
 
                 </div>
                   <span class="text-gray-300 text-sm sm:text-[18px] max-[450px]:text-[12px]"
-                    >{{ restaurant.price }}₸</span
+                    >{{ restaurant.price }}в‚ё</span
                   >
                 </div>
               </div>
@@ -496,7 +497,7 @@ onMounted(() => {
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
       >
         <div class="relative p-4 bg-white rounded-lg w-[90vw] max-w-md">
-          <!-- Кнопка закрытия -->
+          <!-- РљРЅРѕРїРєР° Р·Р°РєСЂС‹С‚РёСЏ -->
           <button
             @click="showEditModal = false"
             class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-200 transition"
@@ -517,15 +518,15 @@ onMounted(() => {
             </svg>
           </button>
 
-          <h2 class="text-lg font-semibold mb-4">Редактировать блюдо</h2>
+          <h2 class="text-lg font-semibold mb-4">Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ Р±Р»СЋРґРѕ</h2>
 
           <label class="block mb-2">
-            Название:
+            РќР°Р·РІР°РЅРёРµ:
             <input v-model="editingDish.name" class="border p-1 w-full" />
           </label>
 
           <label class="block mb-2">
-            Описание:
+            РћРїРёСЃР°РЅРёРµ:
             <textarea
               v-model="editingDish.description"
               class="border p-1 w-full"
@@ -533,7 +534,7 @@ onMounted(() => {
           </label>
 
           <label class="block mb-2">
-            Цена:
+            Р¦РµРЅР°:
             <input
               type="number"
               v-model="editingDish.price"
@@ -543,13 +544,13 @@ onMounted(() => {
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">
-              Категория
+              РљР°С‚РµРіРѕСЂРёСЏ
             </label>
             <select
               v-model="editingDish.category"
               class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
             >
-              <option disabled value="">Выберите категорию</option>
+              <option disabled value="">Р’С‹Р±РµСЂРёС‚Рµ РєР°С‚РµРіРѕСЂРёСЋ</option>
               <option v-for="cat in categories" :key="cat.id" :value="cat.id">
                 {{ cat.name }}
               </option>
@@ -557,7 +558,7 @@ onMounted(() => {
           </div>
 
           <label class="block mb-2">
-            Изображение:
+            РР·РѕР±СЂР°Р¶РµРЅРёРµ:
             <input
               type="file"
               @change="handleFileChange"
@@ -569,7 +570,7 @@ onMounted(() => {
             @click="saveEdit"
             class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
           >
-            Сохранить
+            РЎРѕС…СЂР°РЅРёС‚СЊ
           </button>
         </div>
       </div>
@@ -577,12 +578,12 @@ onMounted(() => {
     <div
       class="fixed bottom-4 right-4 w-12 h-12 z-50"
       ref="cartIcon"
-      v-show="role === 'customer' || role === 'guest'"
+      v-show="canUseCustomerUi()"
     >
-      <div class="relative w-full h-full" @click="router.push('/Basket')">
+      <div class="relative w-full h-full" @click="router.push('/customer/basket')">
         <ShoppingCartIcon class="w-12 h-12 max-[450px]:w-8 max-[450px]:h-8 text-white" />
 
-        <!-- Бейдж -->
+        <!-- Р‘РµР№РґР¶ -->
         <span
           v-if="totalCount > 0"
           class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-6 h-6 flex items-center justify-center rounded-full font-bold shadow"
@@ -593,3 +594,5 @@ onMounted(() => {
     </div>
   </div>
 </template>
+
+

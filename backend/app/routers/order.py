@@ -6,8 +6,20 @@ from app.deps import get_db
 from app import schemas, services
 from app.deps import get_current_user
 from app.models.user import User
+from app.constants.order_status import ORDER_STATUS_FLOW, ORDER_STATUS_LABELS
 
 router = APIRouter()
+
+
+@router.get("/meta", response_model=schemas.OrderMetaResponse)
+def get_order_meta():
+    return schemas.OrderMetaResponse(
+        statuses=[
+            schemas.OrderStatusOption(key=status, label=ORDER_STATUS_LABELS[status])
+            for status in ORDER_STATUS_FLOW
+        ],
+        flow=list(ORDER_STATUS_FLOW),
+    )
 
 @router.post("/", response_model=schemas.OrderRead)
 async def create_order(order_data: schemas.OrderCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

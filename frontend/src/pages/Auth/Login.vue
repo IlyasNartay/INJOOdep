@@ -1,15 +1,13 @@
-<template>
+﻿<template>
   <div
     class="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-blue-900 flex items-center justify-center p-4 animated-gradient"
   >
     <div class="relative w-full max-w-sm">
-      <!-- Glass background -->
       <div
         class="absolute inset-0 bg-gradient-to-br from-white/20 via-white/10 to-white/5 rounded-3xl backdrop-blur-xl border border-white/20 shadow-2xl"
       ></div>
 
       <div class="relative p-8 pt-12">
-        <!-- Avatar -->
         <div class="flex justify-center mb-12">
           <div
             class="w-24 h-24 rounded-full bg-gradient-to-br from-pink-300/60 to-pink-400/40 flex items-center justify-center"
@@ -24,7 +22,6 @@
           </div>
         </div>
 
-        <!-- PHONE -->
         <div class="mb-6">
           <div class="flex items-center space-x-3 pb-2">
             <span class="text-white">🇰🇿</span>
@@ -33,7 +30,7 @@
             <input
               v-model="displayPhone"
               type="tel"
-              placeholder="706 607 05 59"
+              :placeholder="t('auth.phonePlaceholder')"
               class="flex-1 bg-transparent text-white placeholder-white/60 text-lg focus:outline-none"
               @input="errors.common = ''"
             />
@@ -41,7 +38,6 @@
           <div class="h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
         </div>
 
-        <!-- PASSWORD -->
         <div class="mb-6">
           <div class="flex items-center space-x-3 pb-2">
             <LockIcon class="w-5 h-5 text-white/70" />
@@ -49,7 +45,7 @@
             <input
               v-model="data.password"
               :type="showPassword ? 'text' : 'password'"
-              placeholder="Пароль"
+              :placeholder="t('auth.password')"
               class="flex-1 bg-transparent text-white placeholder-white/60 text-lg focus:outline-none"
               @input="errors.common = ''"
             />
@@ -61,31 +57,27 @@
           </div>
           <div class="h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
 
-          <!-- ERROR -->
           <p v-if="errors.common" class="text-red-400 text-sm mt-2">
             {{ errors.common }}
           </p>
         </div>
 
-        <!-- Loader -->
         <Loader v-if="isLoading" />
 
-        <!-- REGISTER -->
         <div class="flex justify-end mb-6">
           <button
             class="text-white/60 text-sm hover:text-white"
             @click="router.push('/auth')"
           >
-            Зарегистрироваться
+            {{ t('auth.noAccount') }}
           </button>
         </div>
 
-        <!-- SUBMIT -->
         <button
           class="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-purple-700 to-blue-600 text-white font-semibold text-lg tracking-wider shadow-lg hover:shadow-xl transition-all"
           @click="login"
         >
-          ВОЙТИ
+          {{ t('auth.login') }}
         </button>
       </div>
     </div>
@@ -98,6 +90,8 @@ import { ref, reactive, watch } from "vue";
 import { useRouter } from "vue-router";
 import Loader from "@/components/Loader.vue";
 import { EyeIcon, EyeSlashIcon, LockClosedIcon as LockIcon } from "@heroicons/vue/24/solid";
+import { t } from "@/i18n";
+import { syncAuthStorage } from "@/utils/roles";
 
 const router = useRouter();
 const isLoading = ref(false);
@@ -114,7 +108,6 @@ const errors = reactive({
 
 const displayPhone = ref("");
 
-// Форматирование номера
 watch(displayPhone, (val) => {
   const digits = val.replace(/\D/g, "").slice(0, 10);
   data.phone = "+7" + digits;
@@ -132,30 +125,25 @@ const login = async () => {
   errors.common = "";
 
   try {
-    const response = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}auth/login`,
-        null,
-        {
-          params: {
-            phone: data.phone,
-            password: data.password,
-          },
-        }
-    );
+    const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}auth/login`, {
+      phone: data.phone,
+      password: data.password,
+    });
 
-    const {access_token, user_role} = response.data;
+    const { access_token, user_role, user_status } = response.data;
 
     localStorage.setItem("authToken", access_token);
-    localStorage.setItem("userRole", user_role);
+    syncAuthStorage(user_role);
+    localStorage.setItem("userStatus", user_status);
 
-    router.push("/CliMain");
+    router.push("/customer/main");
   } catch (error) {
     const detail = error?.response?.data?.detail;
 
     if (detail === "Неверный номер или пароль") {
-      errors.common = "Неверный номер телефона или пароль";
+      errors.common = t("auth.invalidCredentials");
     } else {
-      errors.common = "Ошибка входа. Попробуйте позже";
+      errors.common = t("auth.loginError");
     }
   } finally {
     isLoading.value = false;

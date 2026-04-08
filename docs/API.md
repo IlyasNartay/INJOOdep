@@ -210,3 +210,50 @@
 **Purpose:** Удалить адрес
 **Path Parameter:** `address_id` (integer)
 **Response 200:** Deleted Address Object
+
+---
+
+## Admin Stats
+
+### GET /admin/stats
+
+**Purpose:** Получить админскую статистику по заказам, выручке и пользователям
+
+**Auth:** Bearer token admin user
+
+**Query Parameters (optional):**
+
+* `date_from` (`YYYY-MM-DD`)
+* `date_to` (`YYYY-MM-DD`)
+
+**Response 200:**
+
+```json
+{
+  "overview": {
+    "total_revenue": 152340.0,
+    "total_orders": 248,
+    "avg_check": 614.27,
+    "new_users": 19
+  },
+  "revenue_by_day": [
+    {
+      "date": "2026-04-01",
+      "revenue": 12400.0
+    }
+  ],
+  "top_dishes": [
+    {
+      "name": "Milk Tea",
+      "quantity": 32,
+      "revenue": 28800.0
+    }
+  ],
+  "order_statuses": [
+    {
+      "status": "pending",
+      "count": 12
+    }
+  ]
+}
+```

@@ -1,14 +1,8 @@
-from sqlalchemy import String,Column, Integer, ForeignKey, DateTime, Float, Enum as SqlEnum
+from sqlalchemy import String, Text, Column, Integer, ForeignKey, DateTime, Float, Enum as SqlEnum
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database import Base
-from enum import Enum
-
-class OrderStatus(str, Enum):
-    pending = "pending"
-    accepted = "accepted"
-    ready = "ready"
-    done = "done"
+from app.constants.order_status import OrderStatus
 
 class OrderDish(Base):
     __tablename__ = "order_dishes"
@@ -30,6 +24,7 @@ class Order(Base):
 
     status = Column(SqlEnum(OrderStatus), default=OrderStatus.pending, nullable=False)
     kaspi_number = Column(String, nullable=False)
+    note = Column(Text, nullable=True)
     total_price = Column(Float, nullable=False)
 
     rate_at = Column(DateTime, default=datetime.utcnow, nullable=False)
