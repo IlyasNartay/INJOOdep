@@ -15,7 +15,7 @@
       ]"
       class="w-64 p-4"
     >
-      <!-- Toggle Button (РїРѕРєР°Р·Р°С‚СЊ С‚РѕР»СЊРєРѕ РІРЅСѓС‚СЂРё СЃР°Р№РґР±Р°СЂР°) -->
+      <!-- Toggle button inside the sidebar -->
       <button
         @click="toggleSidebar"
         class="absolute -right-4 top-16 bg-gray-700 text-white rounded-full p-1 shadow z-50"
@@ -43,15 +43,15 @@
       </button>
 
       <!-- Logo -->
-      <div class="text-2xl font-bold mb-6">рџ§‹ Injoo</div>
+      <div class="text-2xl font-bold mb-6">INJOO</div>
 
       <!-- Menu -->
       <component
         v-for="(item, index) in filteredMenu"
         :key="index"
-        :is="item.label === 'Р’С‹С…РѕРґ' ? 'button' : RouterLink"
-        :to="item.label === 'Р’С‹С…РѕРґ' ? undefined : item.to"
-        @click="item.label === 'Р’С‹С…РѕРґ' && logout()"
+        :is="item.action === 'logout' ? 'button' : RouterLink"
+        :to="item.action === 'logout' ? undefined : item.to"
+        @click="item.action === 'logout' && logout()"
         class="hover:bg-gray-700 px-3 py-2 rounded cursor-pointer flex items-center space-x-2 w-full text-left"
       >
         <span class="w-8 h-8 bg-white/20 rounded-full flex justify-center items-center">
@@ -108,7 +108,7 @@ const menuItems = computed(() => [
   { label: t("common.addDishes"), to: "/admin/adddishes", roles: ADMIN_STAFF_ROLES, icon: "line-md:document-add" },
   { label: t("common.makeOrder"), to: "/customer/basket", roles: CUSTOMER_ROLES, modes: [SESSION_MODES.GUEST], icon: "line-md:document-list" },
   { label: t("common.myOrders"), to: "/customer/myorder", roles: CUSTOMER_ROLES, icon: "line-md:document-list" },
-  { label: t("common.logout"), to: "/", roles: AUTH_USER_ROLES, modes: [SESSION_MODES.GUEST], icon: "line-md:clipboard-arrow" },
+  { label: t("common.logout"), to: "/", roles: AUTH_USER_ROLES, modes: [SESSION_MODES.GUEST], icon: "line-md:clipboard-arrow", action: "logout" },
 ]);
 const logout = () => {
   clearAuthStorage();

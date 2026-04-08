@@ -1,4 +1,4 @@
-import { computed, ref } from "vue";
+﻿import { computed, ref } from "vue";
 
 const STORAGE_KEY = "injooLocale";
 const DEFAULT_LOCALE = "ru";
@@ -56,8 +56,8 @@ const messages = {
     },
     menu: {
       selectedCategory: "Выбранная категория",
-      available: "В наличии",
-      unavailable: "Нет в наличии",
+      available: "Доступно",
+      unavailable: "Недоступно",
       editDish: "Редактировать блюдо",
       dishName: "Название",
       description: "Описание",
@@ -83,7 +83,7 @@ const messages = {
         drinks: "Напитки",
         chicken_wings: "Куриные крылья",
         pasta: "Паста",
-        Sushi: "Суши",
+        sushi: "Суши",
         chinese: "Китайская кухня",
         fastfood: "Фастфуд",
       },
@@ -229,7 +229,7 @@ const messages = {
         drinks: "Сусындар",
         chicken_wings: "Тауық қанаттары",
         pasta: "Паста",
-        Sushi: "Суши",
+        sushi: "Суши",
         chinese: "Қытай асханасы",
         fastfood: "Фастфуд",
       },
@@ -375,7 +375,7 @@ const messages = {
         drinks: "饮品",
         chicken_wings: "鸡翅",
         pasta: "意面",
-        Sushi: "寿司",
+        sushi: "寿司",
         chinese: "中餐",
         fastfood: "快餐",
       },
@@ -483,3 +483,5 @@ export function t(path, fallback = "") {
 
   return typeof result === "string" ? result : fallback || path;
 }
+
+

@@ -7,8 +7,6 @@
     >
       <div class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
         <div class="flex items-center justify-between h-14 sm:h-16">
-          <!-- Logo and Location -->
-
           <div class="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
             <h1 class="text-lg sm:text-2xl font-bold text-white">INJOO</h1>
 
@@ -17,31 +15,25 @@
               @click="openModal"
             >
               <MapPinIcon class="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-              <span
-                class="text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none"
-              >
-                <span
-                  class="text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none"
-                >
-                  {{ shortAddress(address) }}
-                </span>
+              <span class="text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none">
+                {{ shortAddress(address) || 'Выберите адрес' }}
               </span>
               <ChevronDownIcon class="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
             </div>
           </div>
+
           <teleport to="body">
             <div
               v-if="isModalOpen"
               @click.self="closeModal"
               class="fixed inset-0 z-50 flex items-center justify-center w-full h-full bg-black/50 backdrop-blur-sm p-4"
             >
-              <div
-                class="flex flex-col w-full max-w-[800px] h-[90vh] max-h-[1000px] bg-white rounded-lg overflow-scroll"
-              >
+              <div class="flex flex-col w-full max-w-[800px] h-[90vh] max-h-[1000px] bg-white rounded-lg overflow-scroll">
                 <div class="flex justify-between items-center p-4 border-b">
                   <h3 class="text-lg font-semibold">Выберите адрес</h3>
                   <button
-                    @click="closeModal()"
+                    type="button"
+                    @click="closeModal"
                     class="p-2 hover:bg-gray-100 rounded-full transition-colors"
                   >
                     <CrossIcon class="w-5 h-5" />
@@ -59,6 +51,7 @@
               </div>
             </div>
           </teleport>
+
           <div class="hidden md:flex flex-1 max-w-md mx-4 lg:mx-8">
             <div class="relative w-full">
               <SearchIcon
@@ -72,8 +65,8 @@
             </div>
           </div>
 
-          <!-- Mobile Search Button -->
           <button
+            type="button"
             class="md:hidden p-2 text-white"
             @click="showMobileSearch = !showMobileSearch"
           >
@@ -81,7 +74,6 @@
           </button>
         </div>
 
-        <!-- Mobile Search Bar -->
         <div v-if="showMobileSearch" class="md:hidden pb-3">
           <div class="relative">
             <SearchIcon
@@ -97,16 +89,12 @@
       </div>
     </header>
 
-    <!-- Address Modal -->
-
-    <!-- Main Content -->
     <MenuInterface />
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref, computed } from "vue";
-import { useRouter, useRoute } from "vue-router";
+import { onMounted, ref } from "vue";
 import Map from "../MainPage/Map.vue";
 import MenuInterface from "../../components/MenuInterface.vue";
 import axios from "axios";
@@ -118,7 +106,6 @@ import {
 } from "lucide-vue-next";
 import { useAddressStore } from "@/stores/addressStore";
 
-// Reactive data
 const searchQuery = ref("");
 const showMobileSearch = ref(false);
 const selectedAddress = ref("");
@@ -126,71 +113,58 @@ const address = ref("");
 const entrance = ref("");
 const floor = ref("");
 const apartment = ref("");
-
-const store = useAddressStore();
 const isModalOpen = ref(false);
+const store = useAddressStore();
 
-// В Main.vue исправьте это:
 function openModal() {
-  selectedAddress.value = address.value; // У вас было .value[0] - это неверно для строки
-  // entrance, floor, apartment в Main.vue уже содержат данные из getAdress()
-  // и они автоматически передадутся в Map через v-model
+  selectedAddress.value = address.value;
   isModalOpen.value = true;
 }
+
 function closeModal() {
   isModalOpen.value = false;
 }
-const shortAddress = (fullAddress) => {
+
+function shortAddress(fullAddress) {
   if (!fullAddress) return "";
   return fullAddress.split(",").slice(0, 2).join(",").trim();
-};
-const getAdress = async () => {
+}
+
+async function getAdress() {
   try {
-    const response = await axios.get(
-      `${import.meta.env.VITE_API_BASE_URL}addresses/`,
-      {
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
-      }
-    );
+    const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}addresses/`, {
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+      },
+    });
 
     const data = response.data;
-
     if (data && data.length > 0) {
       const lastEntry = data[data.length - 1];
-
-      // 1. Заполняем локальные переменные (те, что в v-model)
       address.value = lastEntry.address || "";
       entrance.value = lastEntry.entrance || "";
       floor.value = lastEntry.floor || "";
       apartment.value = lastEntry.apartment || "";
 
-      // 2. Передаем всё в стор одним объектом
       store.setFullAddress({
         address: address.value,
         entrance: entrance.value,
         floor: floor.value,
         apartment: apartment.value,
       });
-
-      // 3. Синхронизируем карту (если функция объявлена)
-      if (typeof searchAddress === "function") {
-        searchAddress();
-      }
     }
   } catch (error) {
     console.error("Ошибка при получении адресов:", error);
   }
-};
+}
+
 onMounted(() => {
   getAdress();
 });
 </script>
 
 <style>
-/* Custom scrollbar for webkit browsers */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -210,14 +184,12 @@ onMounted(() => {
   background: rgba(255, 255, 255, 0.5);
 }
 
-/* Smooth transitions for all interactive elements */
 * {
   transition-property: color, background-color, border-color, transform, opacity;
   transition-duration: 150ms;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Line clamp utility */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -225,16 +197,17 @@ onMounted(() => {
   overflow: hidden;
 }
 
-/* Hide scrollbar on mobile for cleaner look */
 @media (max-width: 640px) {
   .overflow-x-auto::-webkit-scrollbar {
     display: none;
   }
+
   .overflow-x-auto {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
 }
+
 @keyframes gradientMove {
   0% {
     background-position: 0% 50%;

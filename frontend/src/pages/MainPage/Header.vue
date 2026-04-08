@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <!-- Navigation Header -->
   <div class="relative overflow-hidden">
     <!-- 🔴 Видео на фоне -->

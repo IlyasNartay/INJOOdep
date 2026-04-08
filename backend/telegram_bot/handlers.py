@@ -3,6 +3,7 @@ from app.database import SessionLocal
 # Необходимые модели должны быть импортированы из вашего файла app.models
 from app.models import Order, TelegramUser, Address, Dish
 from app.constants.order_status import OrderStatus
+from aiogram.filters import CommandStart
 from aiogram.types import CallbackQuery, Message
 from aiogram.types import InlineKeyboardButton as AioInlineKeyboardButton
 from aiogram.types import InlineKeyboardMarkup as AioInlineKeyboardMarkup
@@ -13,6 +14,17 @@ REGISTER_CODES = {
     "courier456": "courier",
     "admin1789": "admin",
 }
+
+
+@dp.message(CommandStart())
+async def start_command(message: Message):
+    chat_id = message.chat.id
+    text = (
+        "Добро пожаловать в INJOO bot.\n\n"
+        f"Ваш chat_id: `{chat_id}`\n\n"
+        "Если вам нужно назначение роли, передайте этот chat_id администратору."
+    )
+    await message.answer(text, parse_mode="Markdown")
 
 
 # =========================================================================

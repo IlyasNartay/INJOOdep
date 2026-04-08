@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <footer class="bg-gray-900 text-white py-8 px-6">
     <div class="container mx-auto flex flex-col md:flex-row justify-between gap-6">
 

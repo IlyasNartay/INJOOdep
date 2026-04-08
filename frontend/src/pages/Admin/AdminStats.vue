@@ -4,29 +4,29 @@
       <div class="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p class="text-emerald-300 uppercase tracking-[0.35em] text-xs mb-3">Admin dashboard</p>
-          <h1 class="text-3xl sm:text-4xl font-bold">РЎС‚Р°С‚РёСЃС‚РёРєР° СЂРµСЃС‚РѕСЂР°РЅР°</h1>
+          <h1 class="text-3xl sm:text-4xl font-bold">Статистика ресторана</h1>
           <p class="text-white/70 mt-3 max-w-2xl">
-            Р’С‹СЂСѓС‡РєР°, Р·Р°РєР°Р·С‹, СЃСЂРµРґРЅРёР№ С‡РµРє, РЅРѕРІС‹Рµ РїРѕР»СЊР·РѕРІР°С‚РµР»Рё, РґРёРЅР°РјРёРєР° РїРѕ РґРЅСЏРј Рё С‚РѕРї Р±Р»СЋРґ.
+            Выручка, заказы, средний чек, новые пользователи, динамика по дням и топ блюд.
           </p>
         </div>
 
         <div class="flex flex-col sm:flex-row gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
           <label class="flex flex-col gap-1 text-sm">
-            <span class="text-white/60">РЎ</span>
+            <span class="text-white/60">С</span>
             <input v-model="dateFrom" type="date" class="input" />
           </label>
           <label class="flex flex-col gap-1 text-sm">
-            <span class="text-white/60">РџРѕ</span>
+            <span class="text-white/60">По</span>
             <input v-model="dateTo" type="date" class="input" />
           </label>
           <button @click="loadStats" class="self-end rounded-xl bg-emerald-500 px-4 py-3 font-semibold text-slate-950 hover:bg-emerald-400 transition">
-            РћР±РЅРѕРІРёС‚СЊ
+            Обновить
           </button>
         </div>
       </div>
 
       <div v-if="isLoading" class="py-20 text-center text-white/70">
-        Р—Р°РіСЂСѓР·РєР° СЃС‚Р°С‚РёСЃС‚РёРєРё...
+        Загрузка статистики...
       </div>
 
       <div v-else class="space-y-6">
@@ -49,16 +49,16 @@
           <article class="rounded-3xl border border-white/10 bg-slate-950/70 p-5 shadow-2xl backdrop-blur">
             <div class="mb-5 flex items-center justify-between gap-3">
               <div>
-                <h2 class="text-xl font-semibold">Р’С‹СЂСѓС‡РєР° РїРѕ РґРЅСЏРј</h2>
-                <p class="text-sm text-white/55">Р”РёРЅР°РјРёРєР° РїСЂРѕРґР°Р¶ Р·Р° РІС‹Р±СЂР°РЅРЅС‹Р№ РїРµСЂРёРѕРґ</p>
+                <h2 class="text-xl font-semibold">Выручка по дням</h2>
+                <p class="text-sm text-white/55">Динамика продаж за выбранный период</p>
               </div>
               <div class="rounded-full bg-white/5 px-3 py-1 text-xs text-white/65">
-                {{ revenueByDay.length }} С‚РѕС‡РµРє
+                {{ revenueByDay.length }} точек
               </div>
             </div>
 
             <div v-if="!revenueByDay.length" class="rounded-2xl border border-dashed border-white/10 p-10 text-center text-white/50">
-              РќРµС‚ РґР°РЅРЅС‹С… Р·Р° РІС‹Р±СЂР°РЅРЅС‹Р№ РїРµСЂРёРѕРґ
+              Нет данных за выбранный период
             </div>
 
             <div v-else class="overflow-x-auto">
@@ -90,8 +90,8 @@
           <article class="rounded-3xl border border-white/10 bg-white/6 p-5 shadow-2xl backdrop-blur">
             <div class="mb-5 flex items-center justify-between">
               <div>
-                <h2 class="text-xl font-semibold">РЎС‚Р°С‚СѓСЃС‹ Р·Р°РєР°Р·РѕРІ</h2>
-                <p class="text-sm text-white/55">Р Р°СЃРїСЂРµРґРµР»РµРЅРёРµ Р·Р°РєР°Р·РѕРІ РїРѕ СЌС‚Р°РїР°Рј</p>
+                <h2 class="text-xl font-semibold">Статусы заказов</h2>
+                <p class="text-sm text-white/55">Распределение заказов по этапам</p>
               </div>
             </div>
 
@@ -100,7 +100,7 @@
                 <div class="flex items-center justify-between gap-3">
                   <div>
                     <p class="font-medium">{{ statusLabel(item.status) }}</p>
-                    <p class="text-xs text-white/50">{{ item.count }} Р·Р°РєР°Р·РѕРІ</p>
+                    <p class="text-xs text-white/50">{{ item.count }} заказов</p>
                   </div>
                   <span class="rounded-full px-3 py-1 text-xs font-semibold" :class="statusBadgeClass(item.status)">
                     {{ statusPercent(item.count) }}
@@ -117,12 +117,12 @@
         <section class="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
           <article class="rounded-3xl border border-white/10 bg-white/6 p-5 shadow-2xl backdrop-blur">
             <div class="mb-5">
-              <h2 class="text-xl font-semibold">РўРѕРї-5 Р±Р»СЋРґ</h2>
-              <p class="text-sm text-white/55">РџРѕ РєРѕР»РёС‡РµСЃС‚РІСѓ Р·Р°РєР°Р·РѕРІ Рё СЃСѓРјРјРµ</p>
+              <h2 class="text-xl font-semibold">Топ-5 блюд</h2>
+              <p class="text-sm text-white/55">По количеству заказов и сумме</p>
             </div>
 
             <div v-if="!topDishes.length" class="rounded-2xl border border-dashed border-white/10 p-10 text-center text-white/50">
-              РќРµС‚ РґР°РЅРЅС‹С… РґР»СЏ С‚РѕРїР° Р±Р»СЋРґ
+              Нет данных для топа блюд
             </div>
 
             <div v-else class="space-y-3">
@@ -134,12 +134,12 @@
                     </div>
                     <div>
                       <h3 class="font-semibold">{{ dish.name }}</h3>
-                      <p class="text-sm text-white/55">{{ dish.quantity }} Р·Р°РєР°Р·РѕРІ</p>
+                      <p class="text-sm text-white/55">{{ dish.quantity }} заказов</p>
                     </div>
                   </div>
                   <div class="text-right">
                     <p class="font-semibold">{{ formatMoney(dish.revenue) }}</p>
-                    <p class="text-xs text-white/45">Р’С‹СЂСѓС‡РєР°</p>
+                    <p class="text-xs text-white/45">Выручка</p>
                   </div>
                 </div>
                 <div class="mt-3 h-2 rounded-full bg-white/8">
@@ -151,25 +151,25 @@
 
           <article class="rounded-3xl border border-white/10 bg-slate-950/70 p-5 shadow-2xl backdrop-blur">
             <div class="mb-5">
-              <h2 class="text-xl font-semibold">Р”РµС‚Р°Р»Рё РїРµСЂРёРѕРґР°</h2>
-              <p class="text-sm text-white/55">РЎРІРѕРґРєР° РїРѕ РІС‹Р±СЂР°РЅРЅРѕРјСѓ РґРёР°РїР°Р·РѕРЅСѓ РґР°С‚</p>
+              <h2 class="text-xl font-semibold">Детали периода</h2>
+              <p class="text-sm text-white/55">Сводка по выбранному диапазону дат</p>
             </div>
 
             <div class="space-y-3 text-sm text-white/75">
               <div class="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3">
-                <span>РџРµСЂРёРѕРґ</span>
+                <span>Период</span>
                 <span class="text-white">{{ periodLabel }}</span>
               </div>
               <div class="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3">
-                <span>Р’СЃРµРіРѕ Р·Р°РєР°Р·РѕРІ</span>
+                <span>Всего заказов</span>
                 <span class="text-white">{{ stats?.overview.total_orders ?? 0 }}</span>
               </div>
               <div class="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3">
-                <span>РќРѕРІС‹Рµ РїРѕР»СЊР·РѕРІР°С‚РµР»Рё</span>
+                <span>Новые пользователи</span>
                 <span class="text-white">{{ stats?.overview.new_users ?? 0 }}</span>
               </div>
               <div class="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3">
-                <span>РЎСЂРµРґРЅРёР№ С‡РµРє</span>
+                <span>Средний чек</span>
                 <span class="text-white">{{ formatMoney(stats?.overview.avg_check ?? 0) }}</span>
               </div>
             </div>
@@ -200,7 +200,7 @@ const formatMoney = (value) =>
   new Intl.NumberFormat("ru-RU", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(Number(value || 0)) + " в‚ё";
+  }).format(Number(value || 0)) + " ₸";
 
 const loadStats = async () => {
   isLoading.value = true;
@@ -218,7 +218,7 @@ const loadStats = async () => {
     });
     stats.value = response.data;
   } catch (error) {
-    console.error("РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ СЃС‚Р°С‚РёСЃС‚РёРєСѓ", error);
+    console.error("Не удалось загрузить статистику", error);
   } finally {
     isLoading.value = false;
   }
@@ -228,7 +228,7 @@ const loadOrderMeta = async () => {
   try {
     orderMeta.value = await fetchOrderMeta();
   } catch (error) {
-    console.error("Не удалось загрузить order meta", error);
+    console.error("�� ������� ��������� order meta", error);
   }
 };
 
@@ -243,27 +243,27 @@ const orderStatuses = computed(() => stats.value?.order_statuses ?? []);
 
 const overviewCards = computed(() => [
   {
-    label: "Р’С‹СЂСѓС‡РєР°",
+    label: "Выручка",
     value: formatMoney(stats.value?.overview.total_revenue ?? 0),
-    hint: "РЎСѓРјРјР° РІСЃРµС… Р·Р°РєР°Р·РѕРІ",
+    hint: "Сумма всех заказов",
     icon: CircleDollarSign,
   },
   {
-    label: "Р—Р°РєР°Р·С‹",
+    label: "Заказы",
     value: String(stats.value?.overview.total_orders ?? 0),
-    hint: "РљРѕР»РёС‡РµСЃС‚РІРѕ Р·Р°РєР°Р·РѕРІ",
+    hint: "Количество заказов",
     icon: ShoppingBag,
   },
   {
-    label: "РЎСЂРµРґРЅРёР№ С‡РµРє",
+    label: "Средний чек",
     value: formatMoney(stats.value?.overview.avg_check ?? 0),
-    hint: "РЎСЂРµРґРЅСЏСЏ СЃСѓРјРјР° Р·Р°РєР°Р·Р°",
+    hint: "Средняя сумма заказа",
     icon: BarChart3,
   },
   {
-    label: "РќРѕРІС‹Рµ РїРѕР»СЊР·РѕРІР°С‚РµР»Рё",
+    label: "Новые пользователи",
     value: String(stats.value?.overview.new_users ?? 0),
-    hint: "Р—Р° РІС‹Р±СЂР°РЅРЅС‹Р№ РїРµСЂРёРѕРґ",
+    hint: "За выбранный период",
     icon: Users,
   },
 ]);
@@ -324,9 +324,9 @@ const yTicks = computed(() => {
 
 const periodLabel = computed(() => {
   if (dateFrom.value && dateTo.value) return `${dateFrom.value} - ${dateTo.value}`;
-  if (dateFrom.value) return `СЃ ${dateFrom.value}`;
-  if (dateTo.value) return `РґРѕ ${dateTo.value}`;
-  return "РІРµСЃСЊ РїРµСЂРёРѕРґ";
+  if (dateFrom.value) return `с ${dateFrom.value}`;
+  if (dateTo.value) return `до ${dateTo.value}`;
+  return "весь период";
 });
 
 const statusLabel = (status) =>
