@@ -134,13 +134,7 @@ const login = async () => {
   try {
     const response = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}auth/login`,
-        null,
-        {
-          params: {
-            phone: data.phone,
-            password: data.password,
-          },
-        }
+        { phone: data.phone, password: data.password }
     );
 
     const {access_token, user_role} = response.data;
