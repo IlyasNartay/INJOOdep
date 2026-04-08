@@ -14,6 +14,7 @@ import Loader from "./Loader.vue";
 import { useCartStore } from "@/stores/Basket.js";
 import { RouterLink, useRouter } from "vue-router";
 import CustomModal from "./CustomModal.vue";
+import ImageEditor from "@/components/ImageEditor.vue";
 import { useAutoClose } from "@/stores/useAutoClose";
 import { t } from "@/i18n";
 import { USER_ROLES, canUseCustomerUi, currentUserRole } from "@/utils/roles";
@@ -53,6 +54,10 @@ const successEdit = ref(false);
 const successDelete = ref(false);
 const fail = ref(false);
 
+// ─── Image handling ───────────────────────────────────────────────
+const file = ref(null);
+const previewUrl = ref(null);
+// ─── Cart animation ───────────────────────────────────────────────
 function animateToCart(event) {
   const cart = cartIcon.value;
   if (!cart) {
@@ -79,7 +84,6 @@ function animateToCart(event) {
   fly.style.background = "#4ade80"; // Р·РµР»С‘РЅС‹Р№ РєСЂСѓР¶РѕРє
   fly.style.zIndex = "9999";
   fly.style.transition = "all 0.7s cubic-bezier(0.4, 0, 0.2, 1)";
-
   document.body.appendChild(fly);
 
   // Р—Р°РїСѓСЃРє Р°РЅРёРјР°С†РёРё
@@ -95,6 +99,7 @@ function animateToCart(event) {
     fly.remove();
   }, 800);
 }
+
 const totalCount = computed(() =>
   cart.items.reduce((sum, item) => sum + item.quantity, 0)
 );
@@ -105,37 +110,47 @@ const handleAddToCart = (event, restaurant) => {
 const isInCart = (id) => {
   return cart.isInCart(id);
 };
+const isInCart = (id) => cart.isInCart(id);
+
 const filterLabel = computed(() => {
   const cat = categories.value.find((c) => c.id === filterName.value);
   return cat ? cat.name : "";
 });
+
 function selectCategory(category) {
   filterName.value = category.id;
   getExact();
 }
+
+// ─── Modal ────────────────────────────────────────────────────────
 const openEditModal = (dish) => {
   editingDish.value = { ...dish }; // РєРѕРїРёСЏ, С‡С‚РѕР±С‹ РЅРµ РјСѓС‚РёСЂРѕРІР°С‚СЊ РЅР°РїСЂСЏРјСѓСЋ
   showEditModal.value = true;
 };
+
+const closeEditModal = () => {
+  showEditModal.value = false;
+  previewUrl.value = null;
+  file.value = null;
+};
+
+// ─── Scroll ───────────────────────────────────────────────────────
 const scrollLeft = () => {
   const scrollAmount =
     window.innerWidth < 640 ? 240 : window.innerWidth < 1024 ? 260 : 280;
   scrollContainer.value?.scrollBy({ left: -scrollAmount, behavior: "smooth" });
 };
-
 const scrollRight = () => {
   const scrollAmount =
     window.innerWidth < 640 ? 240 : window.innerWidth < 1024 ? 260 : 280;
   scrollContainer.value?.scrollBy({ left: scrollAmount, behavior: "smooth" });
 };
 
+// ─── API ──────────────────────────────────────────────────────────
 const getMenu = async () => {
   isLoading.value = true;
-
   try {
-    const response = await axios.get(
-      `${import.meta.env.VITE_API_BASE_URL}menu/`
-    );
+    const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}menu/`);
     menu.value = response.data;
   } catch (error) {
     console.error("РћС€РёР±РєР° РїСЂРё РїРѕР»СѓС‡РµРЅРёРё РјРµРЅСЋ:", error);
@@ -143,6 +158,7 @@ const getMenu = async () => {
     isLoading.value = false;
   }
 };
+
 const getExact = async () => {
   isLoading.value = true;
   try {
@@ -156,6 +172,7 @@ const getExact = async () => {
     isLoading.value = false;
   }
 };
+
 const deleteDish = async (id) => {
   isLoading.value = true;
   try {
@@ -167,7 +184,6 @@ const deleteDish = async (id) => {
         },
       }
     );
-
     if (response.status === 200) {
       menu.value = menu.value.filter((item) => item.id !== id);
     }
@@ -180,15 +196,14 @@ const deleteDish = async (id) => {
     isLoading.value = false;
   }
 };
+
 const toggleAvailability = async (restaurant) => {
   if (!restaurant) return;
-
   const newStatus = !restaurant.available;
 
   // 1. РЎРѕР·РґР°РµРј РѕР±СЉРµРєС‚ РїР°СЂР°РјРµС‚СЂРѕРІ С„РѕСЂРјС‹ (x-www-form-urlencoded)
   const params = new URLSearchParams();
   params.append("available", newStatus);
-
   try {
     const response = await axios.patch(
       `${import.meta.env.VITE_API_BASE_URL}menu/${restaurant.id}/availability`,
@@ -202,7 +217,6 @@ const toggleAvailability = async (restaurant) => {
         },
       }
     );
-
     if (response.status === 200 || response.status === 204) {
       restaurant.available = newStatus;
     }
@@ -210,12 +224,6 @@ const toggleAvailability = async (restaurant) => {
     console.error("Р”РµС‚Р°Р»Рё РѕС€РёР±РєРё СЃРµСЂРІРµСЂР°:", error.response?.data);
     alert("РќРµ СѓРґР°Р»РѕСЃСЊ РѕР±РЅРѕРІРёС‚СЊ СЃС‚Р°С‚СѓСЃ. РџСЂРѕРІРµСЂСЊС‚Рµ РєРѕРЅСЃРѕР»СЊ.");
   }
-};
-
-const file = ref(null);
-
-const handleFileChange = (event) => {
-  file.value = event.target.files[0];
 };
 
 const saveEdit = async () => {
@@ -229,7 +237,6 @@ const saveEdit = async () => {
   if (file.value) {
     formData.append("images", file.value); // РєР°Рє РІ POST
   }
-
   isLoading.value = true;
   try {
     const response = await axios.put(
@@ -264,6 +271,7 @@ const saveEdit = async () => {
     isLoading.value = false;
   }
 };
+
 useAutoClose(successEdit, 2000);
 useAutoClose(fail, 2500);
 useAutoClose(successDelete, 3000);
@@ -276,9 +284,9 @@ watch(filterName, (newVal) => {
     // РµСЃР»Рё РЅСѓР¶РЅРѕ, РјРѕР¶РµС€СЊ РІС‹Р·РІР°С‚СЊ РґСЂСѓРіСѓСЋ С„СѓРЅРєС†РёСЋ (РЅР°РїСЂРёРјРµСЂ getMenuByCategory(newVal))
   }
 });
+
 onMounted(() => {
   getMenu();
-  console.log(menu, "res");
 });
 </script>
 
@@ -286,7 +294,7 @@ onMounted(() => {
   <div class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
     <Loader v-if="isLoading" />
     <div class="mb-6 sm:mb-8">
-      <div class="flex gap-6 sm:gap-8 overflow-y-hiden overflow-x-scroll">
+      <div class="flex gap-6 sm:gap-8 overflow-y-hidden overflow-x-scroll">
         <div
           v-for="category in categories"
           :key="category.id"
@@ -296,14 +304,9 @@ onMounted(() => {
           <div
             class="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl sm:rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform"
           >
-            <img
-              :src="category.icon"
-              class="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8"
-            />
+            <img :src="category.icon" class="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8" />
           </div>
-          <span
-            class="text-[10px] sm:text-xs text-white text-center leading-tight"
-          >
+          <span class="text-[10px] sm:text-xs text-white text-center leading-tight">
             {{ category.name }}
           </span>
         </div>
@@ -404,29 +407,34 @@ onMounted(() => {
                   </button>
                 </div>
               </CustomModal>
-              <div
-                class="relative w-full aspect-[4/3] overflow-hidden rounded-xl"
-              >
+
+              <!-- Фото блюда — клик открывает редактирование (только admin) -->
+              <div class="relative w-full aspect-[4/3] overflow-hidden rounded-xl">
                 <img
                   v-if="restaurant.images?.length"
                   :src="image_url + restaurant.images[0].image_url"
                   :alt="restaurant.name"
                   class="w-full h-full object-cover object-center transition-transform duration-500"
+                  :class="role === 'admin' ? 'cursor-pointer hover:brightness-75' : ''"
+                  @click.stop="role === 'admin' && openEditModal(restaurant)"
                 />
+                <div
+                  v-if="role === 'admin'"
+                  class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity pointer-events-none"
+                >
+                  <span class="bg-black/60 text-white text-xs px-3 py-1 rounded-full">✏️ Редактировать</span>
+                </div>
               </div>
             </div>
+
             <div class="p-3 sm:p-4">
               <h3 class="font-semibold text-white mb-1 text-sm sm:text-base">
                 {{ restaurant.name }}
               </h3>
-              <p
-                class="text-xs sm:text-sm text-gray-400 mb-2 sm:mb-3 line-clamp-2"
-              >
+              <p class="text-xs sm:text-sm text-gray-400 mb-2 sm:mb-3 line-clamp-2">
                 {{ restaurant.description }}
               </p>
-              <div
-                class="flex items-center justify-end gap-4 text-xs sm:text-sm"
-              >
+              <div class="flex items-center justify-end gap-4 text-xs sm:text-sm">
                 <div class="flex items-center space-x-2 sm:space-x-4">
                   <div class=" ">
                     <button
@@ -451,6 +459,9 @@ onMounted(() => {
                     class="max-[450px]:right-8 max-[450px]:top-[10px] top-3 z-10"
                     v-if="role === USER_ROLES.ADMIN"
                   >
+                    {{ restaurant.available ? "В наличии" : "Нет в наличии" }}
+                  </button>
+                  <div class="max-[450px]:right-8 max-[450px]:top-[10px] top-3 z-10" v-if="role == 'admin'">
                     <PenIcon
                       @click.stop="openEditModal(restaurant)"
                       class="w-5 h-5 sm:w-6 sm:h-6 max-[450px]:h-[12px] max-[450px]:w-[12px] cursor-pointer transition-colors text-white"
@@ -499,22 +510,11 @@ onMounted(() => {
         <div class="relative p-4 bg-white rounded-lg w-[90vw] max-w-md">
           <!-- РљРЅРѕРїРєР° Р·Р°РєСЂС‹С‚РёСЏ -->
           <button
-            @click="showEditModal = false"
+            @click="closeEditModal"
             class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-200 transition"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
 
@@ -564,17 +564,19 @@ onMounted(() => {
               @change="handleFileChange"
               class="border p-1 w-full"
             />
-          </label>
+          </div>
 
           <button
             @click="saveEdit"
-            class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+            class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 w-full font-semibold"
           >
             РЎРѕС…СЂР°РЅРёС‚СЊ
           </button>
         </div>
       </div>
     </CustomModal>
+
+    <!-- Cart icon -->
     <div
       class="fixed bottom-4 right-4 w-12 h-12 z-50"
       ref="cartIcon"

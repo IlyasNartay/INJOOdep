@@ -23,8 +23,8 @@
                 <div class="flex items-center space-x-4 flex-1">
                   <div class="w-20 h-20 max-[480px]:w-[40px] max-[480px]:h-[40px] bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                     <img
-                      v-if="item.images && item.images.length > 0"
-                      :src="image_url + item.images[0].image_url"
+                      v-if="item.images?.length"
+                      :src="imageUrl + item.images[0].image_url"
                       :alt="item.name"
                       class="w-full h-full object-cover"
                     />
@@ -32,14 +32,9 @@
                       Нет фото
                     </div>
                   </div>
-
                   <div class="min-w-0">
-                    <h3 class="font-medium text-gray-900 mb-1 max-[480px]:text-[10px]">
-                      {{ item.name }}
-                    </h3>
-                    <p class="text-sm text-gray-500 max-[480px]:text-[10px]">
-                      {{ item.description }}
-                    </p>
+                    <h3 class="font-medium text-gray-900 mb-1 max-[480px]:text-[10px]">{{ item.name }}</h3>
+                    <p class="text-sm text-gray-500 max-[480px]:text-[10px]">{{ item.description }}</p>
                   </div>
                 </div>
 
@@ -55,14 +50,9 @@
                       @click="decreaseQuantity(item.id)"
                       class="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-50"
                       :disabled="item.quantity <= 1"
-                    >
-                      −
-                    </button>
-
-                    <span class="w-12 text-center text-sm font-medium">
-                      {{ item.quantity }}
-                    </span>
-
+                      class="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-50"
+                    >−</button>
+                    <span class="w-12 text-center text-sm font-medium">{{ item.quantity }}</span>
                     <button
                       @click="increaseQuantity(item.id)"
                       class="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-50"
@@ -86,9 +76,7 @@
             </div>
 
             <div class="mt-8 pt-6 border-t border-gray-200">
-              <h4 class="text-sm font-medium text-gray-500 uppercase mb-3">
-                Добавить комментарий
-              </h4>
+              <h4 class="text-sm font-medium text-gray-500 uppercase mb-3">Комментарий</h4>
               <textarea
                 v-model="orderNote"
                 placeholder="Комментарий к заказу"
@@ -171,12 +159,8 @@
         <div class="bg-white p-6 rounded-2xl w-[90%] max-w-sm">
           <h3 class="text-lg font-semibold mb-4">Удалить адрес?</h3>
           <div class="flex gap-3">
-            <button @click="closeDelete" class="flex-1 bg-gray-100 py-2 rounded">
-              Отмена
-            </button>
-            <button @click="deleteAddress" class="flex-1 bg-red-600 text-white py-2 rounded">
-              Удалить
-            </button>
+            <button @click="closeDelete" class="flex-1 bg-gray-100 py-2 rounded">Отмена</button>
+            <button @click="deleteAddress" class="flex-1 bg-red-600 text-white py-2 rounded">Удалить</button>
           </div>
         </div>
       </div>
@@ -193,8 +177,10 @@ import CustomModal from "@/components/CustomModal.vue";
 
 const cartI = useCartStore();
 const store = useAddressStore();
+const imageUrl = import.meta.env.VITE_API_BASE_URL;
+const apiBase = import.meta.env.VITE_API_BASE_URL;
 
-const addresses = ref([]);
+const addresses       = ref([]);
 const selectedAddressId = ref(null);
 const agreeToTerms = ref(false);
 const deleteModal = ref(false);
@@ -202,18 +188,28 @@ const addressToDelete = ref(null);
 const orderNote = ref("");
 const kaspiPhone = ref("");
 
-const image_url = import.meta.env.VITE_API_BASE_URL;
+function formatKaspi(digits) {
+  // digits — строка из цифр без +, пробелов и т.д.
+  // Формат: +7 (7XX) XXX-XX-XX
+  const d = digits.slice(0, 11);
+  let out = "";
+  if (d.length === 0) return out;
+  out = "+7";
+  if (d.length > 1) out += ` (${d.slice(1, 4)}`;
+  if (d.length > 4) out += `) ${d.slice(4, 7)}`;
+  if (d.length > 7) out += `-${d.slice(7, 9)}`;
+  if (d.length > 9) out += `-${d.slice(9, 11)}`;
+  return out;
+}
 
 const loadAddresses = async () => {
   try {
-    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}addresses/`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-      },
+    const res = await axios.get(`${apiBase}addresses/`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
     });
     addresses.value = res.data;
   } catch (err) {
-    console.error("Ошибка загрузки адресов", err);
+    console.error("Ошибка загрузки адресов:", err);
   }
 };
 
@@ -238,15 +234,13 @@ const closeDelete = () => {
 
 const deleteAddress = async () => {
   try {
-    await axios.delete(`${import.meta.env.VITE_API_BASE_URL}addresses/${addressToDelete.value}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-      },
+    await axios.delete(`${apiBase}addresses/${addressToDelete.value}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
     });
     addresses.value = addresses.value.filter((a) => a.id !== addressToDelete.value);
     closeDelete();
   } catch (err) {
-    console.error("Ошибка удаления адреса", err);
+    console.error("Ошибка удаления адреса:", err);
   }
 };
 
@@ -260,9 +254,7 @@ const decreaseQuantity = (id) => {
   if (item && item.quantity > 1) item.quantity--;
 };
 
-const remove = (id) => {
-  cartI.removeItem(id);
-};
+const remove = (id) => cartI.removeItem(id);
 
 const formatKaspiPhone = (event) => {
   const digits = event.target.value.replace(/\D/g, "");
@@ -270,7 +262,7 @@ const formatKaspiPhone = (event) => {
 };
 
 const makeOrder = async () => {
-  if (!selectedAddressId.value) return;
+  if (!selectedAddressId.value || kaspiPhoneRaw.value.length < 11) return;
 
   try {
     await axios.post(
@@ -294,7 +286,7 @@ const makeOrder = async () => {
     cartI.clearCart();
     alert("Заказ успешно оформлен!");
   } catch (err) {
-    console.error("Ошибка оформления заказа", err);
+    console.error("Ошибка оформления заказа:", err);
     alert("Ошибка оформления заказа");
   }
 };
