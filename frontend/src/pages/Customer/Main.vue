@@ -31,8 +31,8 @@
               @click.self="closeModal"
               class="fixed inset-0 z-50 flex items-center justify-center w-full h-full bg-black/50 backdrop-blur-sm p-4"
             >
-              <div class="flex flex-col w-full max-w-[800px] h-[90vh] max-h-[1000px] bg-white rounded-lg overflow-scroll">
-                <div class="flex justify-between items-center p-4 border-b">
+              <div class="flex flex-col w-full max-w-[800px] h-[90vh] max-h-[1000px] bg-white rounded-lg overflow-y-auto">
+                <div class="flex justify-between items-center p-4 border-b sticky top-0 bg-white">
                   <h3 class="text-lg font-semibold">Выберите адрес</h3>
                   <button
                     type="button"
@@ -43,13 +43,60 @@
                   </button>
                 </div>
 
-                <div class="flex-1">
+                <div class="flex-1 overflow-y-auto">
                   <Map
                     v-model:address="selectedAddress"
                     v-model:entrance="entrance"
                     v-model:floor="floor"
                     v-model:apartment="apartment"
                   />
+                </div>
+
+                <!-- Поля для ввода деталей адреса -->
+                <div class="border-t p-4 bg-gray-50 space-y-3">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      Квартира / Офис
+                    </label>
+                    <input
+                      v-model="apartment"
+                      type="text"
+                      placeholder="Например: 42"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      Подъезд
+                    </label>
+                    <input
+                      v-model="entrance"
+                      type="text"
+                      placeholder="Например: 3"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      Этаж
+                    </label>
+                    <input
+                      v-model="floor"
+                      type="text"
+                      placeholder="Например: 5"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    @click="saveAddress"
+                    class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Сохранить адрес
+                  </button>
                 </div>
               </div>
             </div>
@@ -131,6 +178,53 @@ function closeModal() {
 function shortAddress(fullAddress) {
   if (!fullAddress) return "";
   return fullAddress.split(",").slice(0, 2).join(",").trim();
+}
+
+async function saveAddress() {
+  if (!address.value || !selectedAddress.value) {
+    alert("Пожалуйста, выберите адрес на карте");
+    return;
+  }
+
+  try {
+    const addressData = {
+      address: selectedAddress.value || address.value,
+      entrance: entrance.value || "",
+      floor: floor.value || "",
+      apartment: apartment.value || "",
+    };
+
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_BASE_URL}addresses/`,
+      addressData,
+      {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+      }
+    );
+
+    if (response.status === 200 || response.status === 201) {
+      // Обновляем основной адрес
+      address.value = selectedAddress.value || address.value;
+
+      // Сохраняем в store
+      store.setFullAddress({
+        address: address.value,
+        entrance: entrance.value,
+        floor: floor.value,
+        apartment: apartment.value,
+      });
+
+      closeModal();
+      alert("Адрес успешно сохранён!");
+    }
+  } catch (error) {
+    console.error("Ошибка при сохранении адреса:", error);
+    alert("Ошибка при сохранении адреса. Попробуйте снова.");
+  }
 }
 
 async function getAdress() {
