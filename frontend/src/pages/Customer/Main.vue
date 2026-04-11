@@ -11,13 +11,16 @@
             <h1 class="text-lg sm:text-2xl font-bold text-white">INJOO</h1>
 
             <div
-              class="flex items-center space-x-1 sm:space-x-2 text-cyan-400 cursor-pointer min-w-0"
+              class="flex items-center space-x-1 sm:space-x-2 text-cyan-400 cursor-pointer min-w-0 flex-wrap"
               @click="openModal"
             >
               <MapPinIcon class="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-              <span class="text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none">
+              <span class="text-xs sm:text-sm truncate">
                 {{ shortAddress(address) || 'Выберите адрес' }}
               </span>
+              <span v-if="apartment" class="text-gray-400 text-xs sm:text-sm">кв. {{ apartment }}</span>
+              <span v-if="entrance" class="text-gray-400 text-xs sm:text-sm">подъезд {{ entrance }}</span>
+              <span v-if="floor" class="text-gray-400 text-xs sm:text-sm">этаж {{ floor }}</span>
               <ChevronDownIcon class="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
             </div>
           </div>
@@ -89,7 +92,7 @@
       </div>
     </header>
 
-    <MenuInterface />
+    <MenuInterface :search-query="searchQuery" />
   </div>
 </template>
 

@@ -17,6 +17,13 @@ import ImageEditor from "@/components/ImageEditor.vue";
 import { useAutoClose } from "@/stores/useAutoClose";
 import { currentSessionMode, currentUserRole, SESSION_MODES, USER_ROLES } from "@/utils/roles";
 
+const props = defineProps({
+  searchQuery: {
+    type: String,
+    default: ''
+  }
+});
+
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 const imageUrl = apiBaseUrl;
 const cart = useCartStore();
@@ -63,11 +70,25 @@ const categories = ref([
 const normalizedCategory = (value) => (value || "").trim().toLowerCase();
 
 const filteredMenu = computed(() => {
-  if (filterName.value === "all") {
-    return menu.value;
+  let result = menu.value;
+
+  // Фильтр по категориям
+  if (filterName.value !== "all") {
+    result = result.filter((item) => 
+      normalizedCategory(item.category) === normalizedCategory(filterName.value)
+    );
   }
 
-  return menu.value.filter((item) => normalizedCategory(item.category) === normalizedCategory(filterName.value));
+  // Фильтр по поиску
+  if (props.searchQuery.trim()) {
+    const query = props.searchQuery.toLowerCase();
+    result = result.filter((item) => 
+      item.name.toLowerCase().includes(query) || 
+      item.description.toLowerCase().includes(query)
+    );
+  }
+
+  return result;
 });
 
 const filterLabel = computed(() => {
@@ -434,7 +455,7 @@ onMounted(() => {
                 </div>
 
                 <span class="text-gray-300 text-sm sm:text-[18px] max-[450px]:text-[12px]">
-                  {{ restaurant.price }}?
+                  {{ restaurant.price }}₸
                 </span>
               </div>
             </div>
